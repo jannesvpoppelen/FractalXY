@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # FractalXY
 Investigation of Quantum XY model in Sierpinksi Triangles
 =======
@@ -17,5 +16,3 @@ To generate the data, run:
 To generate the figures, run:
 
 ```python plot.py```
-
->>>>>>> 1500255 (Initial commit)
