@@ -65,6 +65,19 @@ def get_distance_shells(g):
 
     return shells
 
+def get_euclidean_distance_shells_all(positions):
+    """Group unordered node pairs by Euclidean distance."""
+    N = len(positions)
+    shells = defaultdict(list)
+
+    for i in range(N):
+        for j in range(i+1, N):
+            dist = np.linalg.norm(positions[i] - positions[j])
+            dist = np.round(dist, decimals=4)
+            shells[dist].append((i, j))
+
+    return shells
+
 def get_shortest_path(g, source, target):
     """Get list of nodes along one shortest path from source to target."""
     G = nx.Graph()
@@ -73,37 +86,37 @@ def get_shortest_path(g, source, target):
     return nx.shortest_path(G, source=source, target=target)
 
 
-def get_graph_distance_shells(g, source, max_distance=None):
-    """Group nodes by graph distance from source node. """
-    G = nx.Graph()
-    G.add_nodes_from(range(g.n_nodes))
-    G.add_edges_from(g.edges())
-    shells = defaultdict(list)
-    lengths = nx.single_source_shortest_path_length(G, source)
-    
-    for j, d in lengths.items():
-        if j == source or d == 0:
-            continue
-        if max_distance is None or d <= max_distance:
-            shells[d].append((source, j))
-    
-    return shells
+# def get_graph_distance_shells(g, source, max_distance=None):
+#     """Group nodes by graph distance from source node. """
+#     G = nx.Graph()
+#     G.add_nodes_from(range(g.n_nodes))
+#     G.add_edges_from(g.edges())
+#     shells = defaultdict(list)
+#     lengths = nx.single_source_shortest_path_length(G, source)
+#     
+#     for j, d in lengths.items():
+#         if j == source or d == 0:
+#             continue
+#         if max_distance is None or d <= max_distance:
+#             shells[d].append((source, j))
+#     
+#     return shells
 
 
-def get_euclidean_distance_shells(g, positions, source, max_distance=None):
-    """Group nodes by Euclidean distance from source node."""
-    shells = defaultdict(list)
-    source_pos = positions[source]
-
-    for j in range(g.n_nodes):
-        if j == source:
-            continue
-        dist = np.linalg.norm(positions[j] - source_pos)
-        dist = np.round(dist, decimals=4)
-        if max_distance is None or dist <= max_distance:
-            shells[dist].append((source, j))
-
-    return shells
+# def get_euclidean_distance_shells(g, positions, source, max_distance=None):
+#     """Group nodes by Euclidean distance from source node."""
+#     shells = defaultdict(list)
+#     source_pos = positions[source]
+# 
+#     for j in range(g.n_nodes):
+#         if j == source:
+#             continue
+#         dist = np.linalg.norm(positions[j] - source_pos)
+#         dist = np.round(dist, decimals=4)
+#         if max_distance is None or dist <= max_distance:
+#             shells[dist].append((source, j))
+# 
+#     return shells
 
 
 def build_corner_path_correlators(hi, g):

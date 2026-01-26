@@ -468,3 +468,23 @@ def create_figure():
 
 
 create_figure()
+
+
+'''
+# Euclidean distance correlators
+d1_euclidean_list = []
+c1_euclidean_list = []
+c1_euclidean_err_list = []
+for key in observables1.keys():
+    if key.startswith("Cxy_euclidean_r"):
+        d = float(key.split("Cxy_euclidean_r")[1])
+        d1_euclidean_list.append(d)
+        c1_euclidean_list.append(observables1[key]["mean"])
+        c1_euclidean_err_list.append(np.sqrt(observables1[key]["variance"]))
+
+d_arr = np.array(d1_euclidean_list)
+c_arr = np.array(c1_euclidean_list)
+order = np.argsort(d_arr)
+d_arr = d_arr[order]
+c_arr = c_arr[order]
+'''

@@ -60,6 +60,14 @@ def build_full_observables(hi, g, positions=None, name=""):
     obs_dict.update(corner_obs)
 
     if positions is not None:
+        # Euclidean distance correlators (all-to-all)
+        euclidean_shells = get_euclidean_distance_shells_all(positions)
+        for d, pairs in sorted(euclidean_shells.items()):
+            print(f"Euclidean distance shell d={d:.4f}: {len(pairs)} pairs")
+            op = sum(sigmax(hi, i) @ sigmax(hi, j) + sigmay(hi, i) @ sigmay(hi, j) 
+                     for i, j in pairs) / len(pairs)
+            obs_dict[f"Cxy_euclidean_r{d:.4f}"] = op
+        
         # Structure factors
         k_list = get_k_vectors(name, positions)
         obs_dict.update(build_structure_factor_ops(hi, positions, k_list))
@@ -80,8 +88,26 @@ def build_full_observables(hi, g, positions=None, name=""):
 def run_xy_model(g, name, positions=None, J=1.0, Jz=0.0, h=0.0, steps=250, alpha = 1, seed=None, compute_obs=True):
     hi = nk.hilbert.Spin(s=0.5, N=g.n_nodes)
     H = build_hamiltonian(hi, g, J, Jz, h)
-    ntk = 0 
-    otf = 0
+
+    n_chains = 1024
+    if g.n_nodes > 100:
+        n_chains = 256
+
+    # defaults
+    n_samples = 2**13
+    chunk_size = 1024
+    use_ntk = False
+    on_the_fly = False
+
+    if g.n_nodes > 25:
+        n_samples = 2**12
+        use_ntk = True
+        on_the_fly = True
+        chunk_size = 256
+
+    if g.n_nodes > 100:
+        n_samples = 2**10
+
     # Exact diagonalization for first 3 states for small systems
     if g.n_nodes < 16:
         E_gs, psi_gs  = nk.exact.lanczos_ed(H, compute_eigenvectors=True, k=3)
@@ -98,28 +124,14 @@ def run_xy_model(g, name, positions=None, J=1.0, Jz=0.0, h=0.0, steps=250, alpha
     basic_obs = build_basic_observables(hi, g)
     # model = nk.models.RBMModPhase(alpha=alpha, use_hidden_bias=True, kernel_init=nn.initializers.normal(stddev=0.01), hidden_bias_init=nn.initializers.normal(stddev=0.01),)
     model = nk.models.RBM(alpha=alpha, kernel_init=nn.initializers.normal(stddev=0.01), hidden_bias_init=nn.initializers.normal(stddev=0.01))
-    sampler = nk.sampler.MetropolisLocal(hi, n_chains=1024)
-    
-    if g.n_nodes > 100:
-        sampler = nk.sampler.MetropolisLocal(hi, n_chains=256)
+    sampler = nk.sampler.MetropolisLocal(hi, n_chains=n_chains)
 
-    vstate = nk.vqs.MCState(sampler, model, n_samples=2**13, n_discard_per_chain=8, chunk_size = None, seed=seed)
-    lr = optax.linear_schedule(0.01, 0.0001, 500)
-    lr = optax.exponential_decay(init_value=0.01,transition_steps=100,decay_rate=0.9,end_value=1e-4,)
+    vstate = nk.vqs.MCState(sampler, model, n_samples=n_samples, n_discard_per_chain=8, chunk_size=chunk_size, seed=seed)
+    #lr = optax.linear_schedule(0.01, 0.0001, 500)
+    lr = optax.exponential_decay(init_value=0.01, transition_steps=100, decay_rate=0.9, end_value=1e-4)
     optimizer = nk.optimizer.Sgd(learning_rate=lr)
-    if g.n_nodes>25:
-        vstate.n_samples = 2**13
-        vstate.chunk_size = 1024
-        if alpha > 1:
-            vstate.n_samples = 2**12
     
-    if g.n_nodes>100:
-        ntk = 1
-        otf = 1
-        vstate.n_samples = 2**10
-    
-    gs = nk.driver.VMC_SR(hamiltonian=H, optimizer=optimizer, variational_state=vstate, diag_shift=0.001, use_ntk = ntk, on_the_fly = otf)
-   
+    gs = nk.driver.VMC_SR(hamiltonian=H, optimizer=optimizer, variational_state=vstate, diag_shift=0.001, use_ntk=use_ntk, on_the_fly=on_the_fly)   
     if compute_obs:
         gs.run(n_iter=steps, out=name, obs=basic_obs, write_every=5)
     else:
@@ -127,9 +139,11 @@ def run_xy_model(g, name, positions=None, J=1.0, Jz=0.0, h=0.0, steps=250, alpha
     
     # Print final energy and physical variance (σ² = <H²> - <H>²) after optimization
     E = vstate.expect(H)
-    Evar_op = nk.experimental.observable.VarianceObservable(H)
-    Evar = vstate.expect(Evar_op)
+    E2_op = H @ H
+    E2 = vstate.expect(E2_op)
+    Evar = E2 - E * E
     print(f"Final energy: {np.real(E.mean)}, σ² = {np.real(Evar.mean)}")
+    print(print(f"Final energy: {np.real(E.mean)}, σ² = {np.real(E.variance)}"))
     
     # Compute full observables after training
     if not compute_obs:
@@ -207,9 +221,6 @@ def compute_fidelity(vstate1, vstate2):
 generations = [1, 2, 3, 4]
 seeds = [1, 2, 3, 5, 8]
 
-all_results = {}
-
-
 for gen in generations:
     print(f"\n{'='*60}")
     print(f"Fidelity comparisons for generation {gen}")
@@ -236,7 +247,8 @@ for gen in generations:
             print(f"Fidelity between seed {seeds[i]} and seed {seeds[j]}: {fid}")
     
     # Store results for this generation
-    all_results[f"gen{gen}"] = {
+    gen_results = {
+        "generation": gen,
         "seeds": seeds,
         "fidelities": fidelities,
         "mean_fidelity": float(np.mean(list(fidelities.values()))),
@@ -245,9 +257,9 @@ for gen in generations:
         "max_fidelity": float(np.max(list(fidelities.values())))
     }
     
-    print(f"\nGen {gen} summary: mean fidelity = {all_results[f'gen{gen}']['mean_fidelity']:.4f} ± {all_results[f'gen{gen}']['std_fidelity']:.4f}")
+    print(f"\nGen {gen} summary: mean fidelity = {gen_results['mean_fidelity']:.4f} ± {gen_results['std_fidelity']:.4f}")
 
-# Save all results to file
-with open("fidelity_analysis.json", "w") as f:
-    json.dump(all_results, f, indent=2)
-print(f"\nAll fidelity results saved to fidelity_analysis.json")
+    filename = f"fidelity_analysis_gen{gen}.json"
+    with open(filename, "w") as f:
+        json.dump(gen_results, f, indent=2)
+    print(f"Fidelity results saved to {filename}")
