@@ -22,36 +22,36 @@ plt.rcParams.update({
 
 # Load graph structures
 
-edges1 = np.genfromtxt("edges1.txt", dtype=int)
-edges_list1 = [tuple(map(int, e)) for e in edges1]
-vertices1 = np.genfromtxt("vertices1.txt")
-N1 = len(vertices1)
-convergence1 = json.load(open("sierpinski_gen1.log"))
-observables1 = json.load(open("sierpinski_gen1_observables.json"))
+# edges1 = np.genfromtxt("edges1.txt", dtype=int)
+# edges_list1 = [tuple(map(int, e)) for e in edges1]
+# vertices1 = np.genfromtxt("vertices1.txt")
+# N1 = len(vertices1)
+# convergence1 = json.load(open("sierpinski_gen1.log"))
+# observables1 = json.load(open("sierpinski_gen1_observables.json"))
 
 
-edges2 = np.genfromtxt("edges2.txt", dtype=int)
-edges_list2 = [tuple(map(int, e)) for e in edges2]
-vertices2 = np.genfromtxt("vertices2.txt")
-N2 = len(vertices2)
-convergence2 = json.load(open("sierpinski_gen2.log"))
-observables2 = json.load(open("sierpinski_gen2_observables.json"))
+# edges2 = np.genfromtxt("edges2.txt", dtype=int)
+# edges_list2 = [tuple(map(int, e)) for e in edges2]
+# vertices2 = np.genfromtxt("vertices2.txt")
+# N2 = len(vertices2)
+# convergence2 = json.load(open("sierpinski_gen2.log"))
+# observables2 = json.load(open("sierpinski_gen2_observables.json"))
 
 
-edges3 = np.genfromtxt("edges3.txt", dtype=int)
-edges_list3 = [tuple(map(int, e)) for e in edges3]
-vertices3 = np.genfromtxt("vertices3.txt")
-N3 = len(vertices3)
-convergence3 = json.load(open("sierpinski_gen3.log"))
-observables3 = json.load(open("sierpinski_gen3_observables.json"))
+# edges3 = np.genfromtxt("edges3.txt", dtype=int)
+# edges_list3 = [tuple(map(int, e)) for e in edges3]
+# vertices3 = np.genfromtxt("vertices3.txt")
+# N3 = len(vertices3)
+# convergence3 = json.load(open("sierpinski_gen3.log"))
+# observables3 = json.load(open("sierpinski_gen3_observables.json"))
 
 
-edges4 = np.genfromtxt("edges4.txt", dtype=int)
-edges_list4 = [tuple(map(int, e)) for e in edges4]
-vertices4 = np.genfromtxt("vertices4.txt")
-N4 = len(vertices4)
-convergence4 = json.load(open("sierpinski_gen4.log"))
-observables4 = json.load(open("sierpinski_gen4_observables.json"))
+# edges4 = np.genfromtxt("edges4.txt", dtype=int)
+# edges_list4 = [tuple(map(int, e)) for e in edges4]
+# vertices4 = np.genfromtxt("vertices4.txt")
+# N4 = len(vertices4)
+# convergence4 = json.load(open("sierpinski_gen4.log"))
+# observables4 = json.load(open("sierpinski_gen4_observables.json"))
 
 
 def create_figure():
@@ -465,9 +465,7 @@ def create_figure():
     plt.show()
 
 
-
-
-create_figure()
+#create_figure()
 
 
 '''
@@ -488,3 +486,63 @@ order = np.argsort(d_arr)
 d_arr = d_arr[order]
 c_arr = c_arr[order]
 '''
+
+def fidelity_figures():
+    # Load fidelity results from JSON files and create heatmaps
+    generations = [1, 2, 3, 4]
+    
+    # Create subplots: 2x2 grid for 4 generations
+    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+    axes = axes.flatten()
+    
+    for idx, gen in enumerate(generations):
+        filename = f"data/fidelity_gen{gen}.json"
+        with open(filename, "r") as f:
+            data = json.load(f)
+        
+        seeds = data["seeds"]
+        n_seeds = len(seeds)
+        
+        # Build symmetric fidelity matrix
+        fidelity_matrix = np.ones((n_seeds, n_seeds))  # Diagonal = 1 (self-fidelity)
+        
+        for key, value in data["fidelities"].items():
+            # Parse seed indices from key like "seed1_seed2"
+            parts = key.split("_")
+            i = int(parts[0].replace("seed", "")) - 1  # Convert to 0-indexed
+            j = int(parts[1].replace("seed", "")) - 1
+            fidelity_matrix[i, j] = value
+            fidelity_matrix[j, i] = value  # Symmetric
+        
+        # Create heatmap
+        im = axes[idx].imshow(fidelity_matrix, cmap='gnuplot', vmin=0, vmax=1, 
+                             aspect='auto', interpolation='nearest')
+        
+        # Add colorbar
+        cbar = fig.colorbar(im, ax=axes[idx], fraction=0.046, pad=0.04)
+        cbar.set_label('Fidelity', fontsize=12)
+        
+        # Set ticks and labels
+        axes[idx].set_xticks(range(n_seeds))
+        axes[idx].set_yticks(range(n_seeds))
+        axes[idx].set_xticklabels([f'S{s}' for s in seeds], fontsize=11)
+        axes[idx].set_yticklabels([f'S{s}' for s in seeds], fontsize=11)
+        
+        # Add text annotations
+        for i in range(n_seeds):
+            for j in range(n_seeds):
+                text = axes[idx].text(j, i, f'{fidelity_matrix[i, j]:.3f}',
+                                     ha="center", va="center", color="white" if fidelity_matrix[i, j] < 0.5 else "black",
+                                     fontsize=10)
+        
+        axes[idx].set_title(f'Generation {gen}\n(Mean: {data["mean_fidelity"]:.4f}, Std: {data["std_fidelity"]:.4f})', 
+                           fontsize=13, pad=10)
+        axes[idx].set_xlabel('Seed', fontsize=12)
+        axes[idx].set_ylabel('Seed', fontsize=12)
+    
+    plt.tight_layout()
+    plt.savefig("fidelity_heatmaps.png", dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+fidelity_figures()
