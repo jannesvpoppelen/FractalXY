@@ -108,8 +108,8 @@ def save_obs(obs_dict, filename):
 
 
 if __name__ == "__main__":
-    gens = [1]
-    seeds = [1, 2, 3, 4]
+    gens = [1, 2]
+    seeds = [1]
 
     for gen in gens:
         edges = np.genfromtxt(f"edges{gen}.txt", dtype=int)

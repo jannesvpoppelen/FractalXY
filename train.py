@@ -100,13 +100,17 @@ def run_xy_model(g, name, J=1.0, Jz=0.0, hx=None, hy=None, steps=250, alpha = 1,
     optimizer = nk.optimizer.Sgd(learning_rate=lr)
     
     gs = nk.driver.VMC_SR(hamiltonian=H, optimizer=optimizer, variational_state=vstate, diag_shift=0.01)   
-    gs.run(n_iter=steps, obs=obs_dict)
+    log_file = f"{name}" if compute_obs else None
+    gs.run(n_iter=steps, obs=obs_dict, out=log_file)
     
     # Print final energy and variance (σ² = <H²> - <H>²) after optimization
+    # !!!!!
+    # Can be costly for fourth generation
     E = vstate.expect(H)
-    E2_op = H @ H
-    E2 = vstate.expect(E2_op)
-    Evar = E2.mean - E.mean * E.mean
+    # E2_op = H @ H
+    # E2 = vstate.expect(E2_op)
+    # Evar = E2.mean - E.mean * E.mean
+    Evar = E.variance
     print(f"E: {np.real(E.mean)}, σ²: {np.real(Evar)}")
 
     end = time.time()
@@ -115,6 +119,13 @@ def run_xy_model(g, name, J=1.0, Jz=0.0, hx=None, hy=None, steps=250, alpha = 1,
     print("Training time: ", end - start, " seconds")
     
     save_vstate(vstate, outfile)
+    
+    # Remove duplicate vstate file created by NetKet logger if it exists
+    if compute_obs:
+        log_mpack = f"{name}.log.mpack"
+        if os.path.exists(log_mpack):
+            os.remove(log_mpack)
+            # print(f"Removed duplicate vstate file: {log_mpack}")
     
     # Save metadata
     metadata_file = outfile.replace('.mpack', '_metadata.json')
@@ -151,8 +162,8 @@ def run_xy_model(g, name, J=1.0, Jz=0.0, hx=None, hy=None, steps=250, alpha = 1,
 
 
 if __name__ == "__main__":
-    generations = [1, 2, 3]
-    seeds = [1, 2, 3, 4, 5]
+    generations = [1, 2]
+    seeds = [1]
 
     for (i, gen) in enumerate(generations):
         for (j, seed) in enumerate(seeds):
@@ -168,5 +179,5 @@ if __name__ == "__main__":
             g_sierpinski = nk.graph.Graph(edges_list)
             print(f"Sierpinski gen{gen}: {g_sierpinski.n_nodes} nodes\n")
                     
-            vstate = run_xy_model(g_sierpinski, name, steps=1000, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=False, n_samples=2**17, n_chains=32, hy=0)
+            vstate = run_xy_model(g_sierpinski, name, steps=500, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=True, n_samples=2**17, n_chains=32, hy=0)
 
