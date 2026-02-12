@@ -49,7 +49,7 @@ def compute_fidelity(vstate1, vstate2):
 
 
 if __name__ == "__main__":
-    generations = [1]
+    generations = [1, 2, 3, 4]
     seeds = [1, 2, 3, 4, 5]
 
     for gen in generations:
@@ -67,8 +67,8 @@ if __name__ == "__main__":
         
         vstates = []
         for seed in seeds:
-            vstate_file = f"sierpinski_gen{gen}_seed{seed}.mpack"
-            metadata_file = f"sierpinski_gen{gen}_seed{seed}_metadata.json"
+            vstate_file = f"data/sierpinski_gen{gen}_seed{seed}.mpack"
+            metadata_file = f"data/sierpinski_gen{gen}_seed{seed}_metadata.json"
             vstate = load_vstate(vstate_file, metadata_file, hi)
             vstates.append(vstate)
         
