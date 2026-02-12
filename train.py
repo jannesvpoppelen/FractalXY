@@ -25,13 +25,15 @@ def save_vstate(vstate, filename):
     with open(filename, 'wb') as file:
         file.write(flax.serialization.to_bytes(vstate))
 
-def save_metadata(filename, model_config, sampler_config, hamiltonian_config):
+def save_metadata(filename, model_config, sampler_config, hamiltonian_config, final_results=None):
     """Save metadata about model, sampler, and Hamiltonian to JSON."""
     metadata = {
         "model": model_config,
         "sampler": sampler_config,
         "hamiltonian": hamiltonian_config
     }
+    if final_results is not None:
+        metadata["final_results"] = final_results
     with open(filename, 'w') as f:
         json.dump(metadata, f, indent=2)
 
@@ -135,14 +137,21 @@ def run_xy_model(g, name, J=1.0, Jz=0.0, hx=None, hy=None, steps=250, alpha = 1,
         "hx": float(hx),
         "hy": float(hy)
     }
-    save_metadata(metadata_file, model_config, sampler_config, hamiltonian_config)
+    # Store final energy and variance
+    final_results = {
+        "final_energy": float(np.real(E.mean)),
+        "final_variance": float(np.real(Evar)),
+        "training_time": end - start,
+        "n_parameters": vstate.n_parameters
+    }
+    save_metadata(metadata_file, model_config, sampler_config, hamiltonian_config, final_results)
     print(f"Saved metadata to {metadata_file}")
 
     return vstate
 
 
 if __name__ == "__main__":
-    generations = [1]
+    generations = [1, 2, 3]
     seeds = [1, 2, 3, 4, 5]
 
     for (i, gen) in enumerate(generations):
@@ -159,5 +168,5 @@ if __name__ == "__main__":
             g_sierpinski = nk.graph.Graph(edges_list)
             print(f"Sierpinski gen{gen}: {g_sierpinski.n_nodes} nodes\n")
                     
-            vstate = run_xy_model(g_sierpinski, name, steps=500, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=False)
+            vstate = run_xy_model(g_sierpinski, name, steps=1000, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=False, n_samples=2**17, n_chains=32, hy=0)
 
