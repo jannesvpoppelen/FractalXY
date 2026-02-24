@@ -279,6 +279,343 @@ def plot_correlators(observables_files, labels=None, save_prefix="correlators"):
     print(f"\nSaved figure to {save_prefix}.png")
 
 
+def plot_correlators_averaged(observables_by_generation, labels=None, save_prefix="correlators_averaged"):
+    """
+    Plot correlators averaged across multiple seeds for each generation.
+    
+    Parameters:
+    -----------
+    observables_by_generation : dict or list
+        If dict: keys are generation labels, values are lists of observable file paths (one per seed)
+        If list: list of lists, where each sublist contains observable files for that generation
+        Example: {"Gen 1": ["gen1_seed1.json", "gen1_seed2.json"], 
+                  "Gen 2": ["gen2_seed1.json", "gen2_seed2.json"]}
+    labels : list, optional
+        Custom labels for each generation. If None, uses dict keys or "Gen 1", "Gen 2", etc.
+    save_prefix : str
+        Prefix for saved figure filename
+    """
+    # Convert to dict format if list is provided
+    if isinstance(observables_by_generation, list):
+        observables_by_generation = {f"Gen {i+1}": files 
+                                     for i, files in enumerate(observables_by_generation)}
+    
+    if labels is None:
+        labels = list(observables_by_generation.keys())
+    else:
+        # If custom labels provided, create new dict with those labels
+        observables_by_generation = {label: files 
+                                     for label, files in zip(labels, observables_by_generation.values())}
+    
+    graph_data = []  # List of (d_list, c_mean_list, c_sem_list, label)
+    corner_data = []
+    euclidean_data = []
+    
+    for gen_label in labels:
+        files = observables_by_generation[gen_label]
+        n_seeds = len(files)
+        
+        # Load all observables for this generation
+        all_obs = []
+        for filepath in files:
+            with open(filepath, 'r') as f:
+                all_obs.append(json.load(f))
+        
+        # --- Graph correlators ---
+        # Collect all unique distances
+        distances = set()
+        for obs in all_obs:
+            for key in obs.keys():
+                if key.startswith("Cxy_graph_r"):
+                    d = int(key.split("Cxy_graph_r")[1])
+                    distances.add(d)
+        
+        if len(distances) > 0:
+            distances = sorted(distances)
+            c_means = []
+            c_sems = []
+            
+            for d in distances:
+                key = f"Cxy_graph_r{d}"
+                values = []
+                for obs in all_obs:
+                    if key in obs:
+                        values.append(obs[key]["mean"])
+                
+                if len(values) > 0:
+                    c_mean = np.mean(values)
+                    c_sem = np.std(values, ddof=1) / np.sqrt(len(values)) if len(values) > 1 else 0.0
+                    c_means.append(c_mean)
+                    c_sems.append(c_sem)
+                else:
+                    c_means.append(np.nan)
+                    c_sems.append(np.nan)
+            
+            graph_data.append((distances, c_means, c_sems, gen_label))
+        
+        # --- Corner correlators ---
+        distances_corner = set()
+        for obs in all_obs:
+            for key in obs.keys():
+                if key.startswith("Cxy_corner_d"):
+                    d = int(key.split("Cxy_corner_d")[1])
+                    distances_corner.add(d)
+        
+        if len(distances_corner) > 0:
+            distances_corner = sorted(distances_corner)
+            c_corner_means = []
+            c_corner_sems = []
+            
+            for d in distances_corner:
+                key = f"Cxy_corner_d{d}"
+                values = []
+                for obs in all_obs:
+                    if key in obs:
+                        values.append(obs[key]["mean"])
+                
+                if len(values) > 0:
+                    c_mean = np.mean(values)
+                    c_sem = np.std(values, ddof=1) / np.sqrt(len(values)) if len(values) > 1 else 0.0
+                    c_corner_means.append(c_mean)
+                    c_corner_sems.append(c_sem)
+                else:
+                    c_corner_means.append(np.nan)
+                    c_corner_sems.append(np.nan)
+            
+            corner_data.append((distances_corner, c_corner_means, c_corner_sems, gen_label))
+        
+        # --- Euclidean correlators ---
+        distances_euclidean = set()
+        for obs in all_obs:
+            for key in obs.keys():
+                if key.startswith("Cxy_euclidean_r"):
+                    d = float(key.split("Cxy_euclidean_r")[1])
+                    distances_euclidean.add(d)
+        
+        if len(distances_euclidean) > 0:
+            distances_euclidean = sorted(distances_euclidean)
+            c_euclidean_means = []
+            c_euclidean_sems = []
+            
+            for d in distances_euclidean:
+                key = f"Cxy_euclidean_r{d:.4f}"
+                values = []
+                for obs in all_obs:
+                    # Match key with tolerance for floating point
+                    for obs_key in obs.keys():
+                        if obs_key.startswith("Cxy_euclidean_r"):
+                            d_obs = float(obs_key.split("Cxy_euclidean_r")[1])
+                            if abs(d_obs - d) < 1e-6:
+                                values.append(obs[obs_key]["mean"])
+                                break
+                
+                if len(values) > 0:
+                    c_mean = np.mean(values)
+                    c_sem = np.std(values, ddof=1) / np.sqrt(len(values)) if len(values) > 1 else 0.0
+                    c_euclidean_means.append(c_mean)
+                    c_euclidean_sems.append(c_sem)
+                else:
+                    c_euclidean_means.append(np.nan)
+                    c_euclidean_sems.append(np.nan)
+            
+            euclidean_data.append((distances_euclidean, c_euclidean_means, c_euclidean_sems, gen_label))
+    
+    # Plotting setup
+    markers = ['o', 's', '^', 'd', 'v', '<', '>', 'p']
+    base_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+                   '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    
+    has_euclidean = len(euclidean_data) > 0
+    if has_euclidean:
+        fig, axs = plt.subplots(2, 2, figsize=(16, 12))
+        ax_graph_lin = axs[0, 0]
+        ax_graph_log = axs[0, 1]
+        ax_eucl_lin = axs[1, 0]
+        ax_eucl_log = axs[1, 1]
+    else:
+        fig, (ax_graph_lin, ax_graph_log) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    ax_graph_lin.set_xlabel(r'Graph Distance $r$', fontsize=18)
+    ax_graph_lin.set_ylabel(r'$C_{xy}(r)$', fontsize=18)
+    ax_graph_lin.grid(alpha=0.3)
+    
+    ax_graph_log.set_xlabel(r'Graph Distance $r$', fontsize=18)
+    ax_graph_log.set_ylabel(r'$C_{xy}(r)$', fontsize=18)
+    ax_graph_log.set_xscale('log')
+    ax_graph_log.set_yscale('log')
+    ax_graph_log.grid(alpha=0.3, which='both', linestyle='--')
+    
+    # Plot graph correlators
+    for idx, (d_list, c_list, c_sem_list, label) in enumerate(graph_data):
+        marker = markers[idx % len(markers)]
+        color = base_colors[idx % len(base_colors)]
+        
+        d_arr = np.array(d_list)
+        c_arr = np.array(c_list)
+        c_sem_arr = np.array(c_sem_list)
+        
+        # Remove NaN values
+        mask = ~np.isnan(c_arr)
+        d_arr = d_arr[mask]
+        c_arr = c_arr[mask]
+        c_sem_arr = c_sem_arr[mask]
+        
+        ax_graph_lin.errorbar(d_arr, c_arr, yerr=c_sem_arr, fmt=marker,
+                             markersize=8, linewidth=2, markeredgewidth=2,
+                             linestyle='-', capsize=4, color=color,
+                             label=label, zorder=3)
+        
+        # For log plot, only use positive values
+        mask_pos = c_arr > 0
+        d_pos = d_arr[mask_pos]
+        c_pos = c_arr[mask_pos]
+        c_sem_pos = c_sem_arr[mask_pos]
+        
+        if len(d_pos) >= 2:
+            try:
+                log_r = np.log(d_pos)
+                log_c = np.log(c_pos)
+                poly = np.polyfit(log_r, log_c, 1)
+                eta = -poly[0]
+                A = np.exp(poly[1])
+                print(f"{label} (graph): η = {eta:.4f}, A = {A:.4f}")
+                
+                ax_graph_log.scatter(d_pos, c_pos, marker=marker, s=64, 
+                             color=color, label=label, zorder=3)
+                r_fine = np.logspace(np.log10(d_pos.min()), np.log10(d_pos.max()), 100)
+                ax_graph_log.loglog(r_fine, A * r_fine**(-eta), '--', 
+                            linewidth=2.5, color=color, alpha=0.7, zorder=2)
+            except:
+                print(f"{label} (graph): Power-law fit failed")
+                ax_graph_log.scatter(d_pos, c_pos, marker=marker, s=64, color=color, 
+                             label=label, zorder=3)
+    
+    # Plot corner correlators
+    for idx, (d_list, c_list, c_sem_list, label) in enumerate(corner_data):
+        marker = markers[idx % len(markers)]
+        color = base_colors[idx % len(base_colors)]
+        
+        d_arr = np.array(d_list)
+        c_arr = np.array(c_list)
+        c_sem_arr = np.array(c_sem_list)
+        
+        # Remove NaN values
+        mask = ~np.isnan(c_arr)
+        d_arr = d_arr[mask]
+        c_arr = c_arr[mask]
+        c_sem_arr = c_sem_arr[mask]
+        
+        ax_graph_lin.errorbar(d_arr, c_arr, yerr=c_sem_arr, fmt=marker,
+                             markersize=8, linewidth=2, markeredgewidth=2,
+                             linestyle='--', capsize=4, color=color,
+                             markerfacecolor='none', markeredgecolor=color,
+                             label=f'{label} (corner)', zorder=3, alpha=0.7)
+        
+        # For log plot, only use positive values
+        mask_pos = c_arr > 0
+        d_pos = d_arr[mask_pos]
+        c_pos = c_arr[mask_pos]
+        c_sem_pos = c_sem_arr[mask_pos]
+        
+        if len(d_pos) >= 2:
+            try:
+                log_r = np.log(d_pos)
+                log_c = np.log(c_pos)
+                poly = np.polyfit(log_r, log_c, 1)
+                eta = -poly[0]
+                A = np.exp(poly[1])
+                print(f"{label} (corner): η = {eta:.4f}, A = {A:.4f}")
+                
+                ax_graph_log.scatter(d_pos, c_pos, marker=marker, s=64, 
+                             facecolors='none', edgecolors=color, linewidths=2,
+                             zorder=3, alpha=0.7)
+                r_fine = np.logspace(np.log10(d_pos.min()), np.log10(d_pos.max()), 100)
+                ax_graph_log.loglog(r_fine, A * r_fine**(-eta), ':', 
+                            linewidth=2, color=color, alpha=0.6, zorder=2)
+            except:
+                print(f"{label} (corner): Power-law fit failed")
+                ax_graph_log.scatter(d_pos, c_pos, marker=marker, s=64,
+                             facecolors='none', edgecolors=color, linewidths=2,
+                             label=f'{label} (corner)', zorder=3, alpha=0.7)
+    
+    ax_graph_lin.text(0.02, 0.98, 'Filled marker: all-to-all correlators\nHollow marker: corner-to-corner correlators', 
+                     transform=ax_graph_lin.transAxes, fontsize=10,
+                     verticalalignment='top', bbox=dict(boxstyle='round', 
+                     facecolor='wheat', alpha=0.8))
+    ax_graph_log.text(0.02, 0.12, 'Filled marker: all-to-all correlators\nHollow marker: corner-to-corner correlators', 
+                     transform=ax_graph_log.transAxes, fontsize=10,
+                     verticalalignment='top', bbox=dict(boxstyle='round', 
+                     facecolor='wheat', alpha=0.8))
+    
+    ax_graph_lin.legend(fontsize=11, framealpha=0.9, loc='best')
+    ax_graph_log.legend(fontsize=11, framealpha=0.9, loc='best')
+    
+    # Euclidean distance correlators
+    if has_euclidean:
+        ax_eucl_lin.set_xlabel(r'Euclidean Distance $r$', fontsize=18)
+        ax_eucl_lin.set_ylabel(r'$C_{xy}(r)$', fontsize=18)
+        ax_eucl_lin.grid(alpha=0.3)
+        
+        ax_eucl_log.set_xlabel(r'Euclidean Distance $r$', fontsize=18)
+        ax_eucl_log.set_ylabel(r'$C_{xy}(r)$', fontsize=18)
+        ax_eucl_log.set_xscale('log')
+        ax_eucl_log.set_yscale('log')
+        ax_eucl_log.grid(alpha=0.3, which='both', linestyle='--')
+        
+        for idx, (d_list, c_list, c_sem_list, label) in enumerate(euclidean_data):
+            marker = markers[idx % len(markers)]
+            color = base_colors[idx % len(base_colors)]
+            
+            d_arr = np.array(d_list)
+            c_arr = np.array(c_list)
+            c_sem_arr = np.array(c_sem_list)
+            
+            # Remove NaN values
+            mask = ~np.isnan(c_arr)
+            d_arr = d_arr[mask]
+            c_arr = c_arr[mask]
+            c_sem_arr = c_sem_arr[mask]
+            
+            ax_eucl_lin.errorbar(d_arr, c_arr, yerr=c_sem_arr, fmt=marker,
+                                markersize=8, linewidth=2, markeredgewidth=2,
+                                linestyle='-', capsize=4, color=color,
+                                label=label, zorder=3)
+            
+            # For log plot, only use positive values
+            mask_pos = c_arr > 0
+            d_pos = d_arr[mask_pos]
+            c_pos = c_arr[mask_pos]
+            c_sem_pos = c_sem_arr[mask_pos]
+            
+            if len(d_pos) >= 2:
+                try:
+                    log_r = np.log(d_pos)
+                    log_c = np.log(c_pos)
+                    poly = np.polyfit(log_r, log_c, 1)
+                    eta = -poly[0]
+                    A = np.exp(poly[1])
+                    print(f"{label} (euclidean): η = {eta:.4f}, A = {A:.4f}")
+                    
+                    ax_eucl_log.scatter(d_pos, c_pos, marker=marker, s=64, 
+                                 color=color, label=label, zorder=3)
+                    r_fine = np.logspace(np.log10(d_pos.min()), np.log10(d_pos.max()), 100)
+                    ax_eucl_log.loglog(r_fine, A * r_fine**(-eta), '--', 
+                                linewidth=2.5, color=color, alpha=0.7, zorder=2)
+                except:
+                    print(f"{label} (euclidean): Power-law fit failed")
+                    ax_eucl_log.scatter(d_pos, c_pos, marker=marker, s=64, color=color, 
+                                 label=label, zorder=3)
+        
+        ax_eucl_lin.legend(fontsize=11, framealpha=0.9, loc='best')
+        ax_eucl_log.legend(fontsize=11, framealpha=0.9, loc='best')
+    
+    plt.tight_layout()
+    plt.savefig(f"{save_prefix}.png", dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    print(f"\nSaved averaged correlators figure to {save_prefix}.png")
+
+
 def fidelity_figures():
     # Load fidelity results from JSON files and create heatmaps
     generations = [1, 2, 3, 4]
@@ -335,16 +672,46 @@ def fidelity_figures():
     plt.savefig("fidelity_heatmaps.png", dpi=300, bbox_inches='tight')
     plt.show()
 
-# fidelity_figures()
+fidelity_figures()
 
 
 # Example usage of plot_correlators:
 plot_correlators(
     observables_files=[
-        "sierpinski_gen1_seed1_observables.json",
-        "sierpinski_gen2_seed1_observables.json"],
-    labels=["Gen 1", "Gen 2"],
+        "data/sierpinski_gen1_seed1_observables.json",
+        "data/sierpinski_gen2_seed1_observables.json",
+        "data/sierpinski_gen3_seed1_observables.json",
+        "data/sierpinski_gen4_seed1_observables.json"],
+    labels=["Gen 1", "Gen 2", "Gen 3", "Gen 4"],
     save_prefix="xy_correlator_analysis"
+)
+
+
+# Example usage of plot_correlators_averaged (averaging across multiple seeds):
+plot_correlators_averaged(
+    observables_by_generation={
+        "Gen 1": ["data/sierpinski_gen1_seed1_observables.json",
+                  "data/sierpinski_gen1_seed2_observables.json",
+                  "data/sierpinski_gen1_seed3_observables.json",
+                  "data/sierpinski_gen1_seed4_observables.json",
+                   "data/sierpinski_gen1_seed5_observables.json"],
+        "Gen 2": ["data/sierpinski_gen2_seed1_observables.json",
+                  "data/sierpinski_gen2_seed2_observables.json",
+                  "data/sierpinski_gen2_seed3_observables.json",
+                  "data/sierpinski_gen2_seed4_observables.json",
+                   "data/sierpinski_gen2_seed5_observables.json"],
+        "Gen 3": ["data/sierpinski_gen3_seed1_observables.json",
+                  "data/sierpinski_gen3_seed2_observables.json",
+                  "data/sierpinski_gen3_seed3_observables.json",
+                  "data/sierpinski_gen3_seed4_observables.json",
+                   "data/sierpinski_gen3_seed5_observables.json"],
+        "Gen 4": ["data/sierpinski_gen4_seed1_observables.json",
+                  "data/sierpinski_gen4_seed2_observables.json",
+                  "data/sierpinski_gen4_seed3_observables.json",
+                  "data/sierpinski_gen4_seed4_observables.json",
+                   "data/sierpinski_gen4_seed5_observables.json"]
+    },
+    save_prefix="xy_correlator_averaged"
 )
 
 

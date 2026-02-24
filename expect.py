@@ -109,7 +109,7 @@ def save_obs(obs_dict, filename):
 
 if __name__ == "__main__":
     gens = [1, 2]
-    seeds = [1]
+    seeds = [1, 2, 3, 4, 5]
 
     for gen in gens:
         edges = np.genfromtxt(f"edges{gen}.txt", dtype=int)
@@ -119,6 +119,6 @@ if __name__ == "__main__":
         hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
         obs_dict = build_observables(hi, g_sierpinski, positions=vertices)
         for seed in seeds:
-            vstate = load_vstate(f"sierpinski_gen{gen}_seed{seed}.mpack", f"sierpinski_gen{gen}_seed{seed}_metadata.json", hi)
+            vstate = load_vstate(f"data/sierpinski_gen{gen}_seed{seed}.mpack", f"data/sierpinski_gen{gen}_seed{seed}_metadata.json", hi)
             results = compute_obs(vstate, obs_dict)
-            save_obs(results, f"sierpinski_gen{gen}_seed{seed}_observables.json")
+            save_obs(results, f"data/sierpinski_gen{gen}_seed{seed}_observables.json")
