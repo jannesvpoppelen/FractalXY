@@ -15,6 +15,7 @@ import optax
 import time
 
 from utils import *
+from gaskets import *
 
 print(f"NetKet {nk.__version__}, Jax {jax.__version__}")
 print(f"JAX is using: {jax.devices()}")
@@ -162,22 +163,27 @@ def run_xy_model(g, name, J=1.0, Jz=0.0, hx=None, hy=None, steps=250, alpha = 1,
 
 
 if __name__ == "__main__":
-    generations = [1, 2]
-    seeds = [1]
+    generations = [1, 2, 3, 4]
+    seeds = [1, 2, 3, 4, 5]
+    shapes = ['triangular', 'honeycomb']
+    for shape in shapes:
+        for (i, G) in enumerate(generations):
+            for (j, seed) in enumerate(seeds):
+                print(f"\n{'='*60}")
+                print(f"Running generation {G}")
+                print(f"{'='*60}\n")
+                
+                if shape == 'triangular':
+                    A = t_gasket(G)
+                else:
+                    A = h_gasket(G)
 
-    for (i, gen) in enumerate(generations):
-        for (j, seed) in enumerate(seeds):
-            print(f"\n{'='*60}")
-            print(f"Running generation {gen}")
-            print(f"{'='*60}\n")
-            
-            edges = np.genfromtxt(f"edges{gen}.txt", dtype=int)
-            edges_list = [tuple(map(int, e)) for e in edges]
-            vertices = np.genfromtxt(f"vertices{gen}.txt")
-            
-            name = f"sierpinski_gen{gen}_seed{seed}"
-            g_sierpinski = nk.graph.Graph(edges_list)
-            print(f"Sierpinski gen{gen}: {g_sierpinski.n_nodes} nodes\n")
-                    
-            vstate = run_xy_model(g_sierpinski, name, steps=500, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=True, n_samples=2**17, n_chains=32, hy=0)
+                A = A.tocoo()   
+                edges = list(zip(A.row, A.col))
+                edges_list = [(i, j) for i, j in edges if i < j]
+                
+                name = f"{shape}_gasket_G={G}_seed={seed}"
+                g_sierpinski = nk.graph.Graph(edges_list)
+                print(f"{shape} gasket G={G}: {g_sierpinski.n_nodes} nodes\n")                        
+                vstate = run_xy_model(g_sierpinski, name, steps=500, alpha=1, seed=seed, outfile=f"{name}.mpack", compute_obs=True, n_samples=2**17, n_chains=32, hy=0, hx=0)
 
