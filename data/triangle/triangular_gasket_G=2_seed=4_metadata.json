@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "RBM",
+    "alpha": 1,
+    "kernel_init": "normal(stddev=0.01)",
+    "hidden_bias_init": "normal(stddev=0.01)"
+  },
+  "sampler": {
+    "type": "MetropolisLocal",
+    "n_chains": 32,
+    "n_samples": 131072,
+    "n_discard_per_chain": 128,
+    "seed": 4
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "final_results": {
+    "final_energy": -31.112238285635243,
+    "final_variance": 0.03636459776884833,
+    "training_time": 739.7669365406036,
+    "n_parameters": 255
+  }
+}
