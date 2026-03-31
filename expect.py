@@ -12,6 +12,7 @@ import flax
 from flax import linen as nn
 
 from utils import *
+from gaskets import *
 from train import build_hamiltonian
 
 
@@ -28,7 +29,7 @@ def build_observables(hi, g, positions=None):
         "Mx": Mx,
         "My": My,
         "Mz": Mz,
-        "M2_perp": Mx @ Mx + My @ My,
+        # "M2_perp": Mx @ Mx + My @ My,
     }
     
     # All-to-all graph distance correlators, includes bulk
@@ -59,7 +60,7 @@ def build_observables(hi, g, positions=None):
         obs_dict[f"Mx_{i}"] = sigmax(hi, i)
         obs_dict[f"My_{i}"] = sigmay(hi, i)
         obs_dict[f"Mz_{i}"] = sigmaz(hi, i)
-        obs_dict[f"M2_perp_{i}"] = sigmax(hi, i) @ Mx_total + sigmay(hi, i) @ My_total
+        #obs_dict[f"M2_perp_{i}"] = sigmax(hi, i) @ Mx_total + sigmay(hi, i) @ My_total
     
     return obs_dict
 
@@ -101,6 +102,7 @@ def save_obs(obs_dict, filename):
         serializable_dict[name] = {
             "mean": float(np.real(value.mean)),
             "variance": float(np.real(value.variance)),
+            "error": float(np.real(value.error_of_mean))
         }
     with open(filename, 'w') as f:
         json.dump(serializable_dict, f, indent=2)
@@ -108,17 +110,27 @@ def save_obs(obs_dict, filename):
 
 
 if __name__ == "__main__":
-    gens = [1, 2]
+    gens = [4]
     seeds = [1, 2, 3, 4, 5]
+    #shapes = ['triangular', 'honeycomb']
+    shapes = ['honeycomb']
 
-    for gen in gens:
-        edges = np.genfromtxt(f"edges{gen}.txt", dtype=int)
-        edges_list = [tuple(map(int, e)) for e in edges]
-        vertices = np.genfromtxt(f"vertices{gen}.txt")
-        g_sierpinski = nk.graph.Graph(edges_list)
-        hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
-        obs_dict = build_observables(hi, g_sierpinski, positions=vertices)
-        for seed in seeds:
-            vstate = load_vstate(f"data/sierpinski_gen{gen}_seed{seed}.mpack", f"data/sierpinski_gen{gen}_seed{seed}_metadata.json", hi)
-            results = compute_obs(vstate, obs_dict)
-            save_obs(results, f"data/sierpinski_gen{gen}_seed{seed}_observables.json")
+    for shape in shapes:
+        for (i, G) in enumerate(gens):
+            if shape == 'triangular':
+                A = t_gasket(G)
+            else:
+                A = h_gasket(G)
+            A = A.tocoo()
+            edges = list(zip(A.row, A.col))
+            edges_list = [(i, j) for i, j in edges if i < j]
+            x, y  = gasket_coordinates(G)
+            vertices = np.column_stack((x, y))
+            g_sierpinski = nk.graph.Graph(edges_list)
+            hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
+            obs_dict = build_observables(hi, g_sierpinski, positions=vertices)
+            for (j, seed) in enumerate(seeds):
+                vstate = load_vstate(f"data/{shape}/{shape}_gasket_G={G}_seed={seed}.mpack", f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_metadata.json", hi)
+                vstate.chunk_size = 512
+                results = compute_obs(vstate, obs_dict)
+                save_obs(results, f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_observables.json")

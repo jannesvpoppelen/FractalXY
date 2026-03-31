@@ -10,6 +10,7 @@ from netket.experimental.observable import InfidelityOperator
 import flax
 from flax import linen as nn
 from utils import *
+from gaskets import *
 
 print(f"NetKet {nk.__version__}, Jax {jax.__version__}")
 print(f"JAX is using: {jax.devices()}")
@@ -49,50 +50,57 @@ def compute_fidelity(vstate1, vstate2):
 
 
 if __name__ == "__main__":
-    generations = [1, 2, 3, 4]
+    gens = [1, 2, 3, 4]
     seeds = [1, 2, 3, 4, 5]
+    shapes = ['triangular', 'honeycomb']
 
-    for gen in generations:
-        print(f"\n{'='*60}")
-        print(f"Fidelity comparisons for generation {gen}")
-        print(f"{'='*60}\n")
-        
-        edges = np.genfromtxt(f"edges{gen}.txt", dtype=int)
-        edges_list = [tuple(map(int, e)) for e in edges]
-        vertices = np.genfromtxt(f"vertices{gen}.txt")
-        
-        g_sierpinski = nk.graph.Graph(edges_list)
-        hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
-        print(f"Sierpinski gen{gen}: {g_sierpinski.n_nodes} nodes\n")
-        
-        vstates = []
-        for seed in seeds:
-            vstate_file = f"data/sierpinski_gen{gen}_seed{seed}.mpack"
-            metadata_file = f"data/sierpinski_gen{gen}_seed{seed}_metadata.json"
-            vstate = load_vstate(vstate_file, metadata_file, hi)
-            vstates.append(vstate)
-        
-        fidelities = {}
-        for i in range(len(seeds)):
-            for j in range(i+1, len(seeds)):
-                fid = compute_fidelity(vstates[i], vstates[j])
-                fidelities[f"seed{seeds[i]}_seed{seeds[j]}"] = float(fid)
-                print(f"Fidelity between seed {seeds[i]} and seed {seeds[j]}: {fid}")
-        
-        # Store results for this generation
-        gen_results = {
-            "generation": gen,
-            "seeds": seeds,
-            "fidelities": fidelities,
-            "mean_fidelity": float(np.mean(list(fidelities.values()))),
-            "std_fidelity": float(np.std(list(fidelities.values()))),
-            "min_fidelity": float(np.min(list(fidelities.values()))),
-            "max_fidelity": float(np.max(list(fidelities.values())))
-        }
-        
-        print(f"\nGen {gen} summary: mean fidelity = {gen_results['mean_fidelity']:.4f} ± {gen_results['std_fidelity']:.4f}")
+    for shape in shapes:
+        for G in gens:
+            print(f"\n{'='*60}")
+            print(f"Fidelity comparisons for {shape} gasket, G={G}")
+            print(f"{'='*60}\n")
 
-        filename = f"fidelity_gen{gen}.json"
-        with open(filename, "w") as f:
-            json.dump(gen_results, f, indent=2)
-        print(f"Fidelity results saved to {filename}")
+            if shape == 'triangular':
+                A = t_gasket(G)
+            else:
+                A = h_gasket(G)
+            A = A.tocoo()
+            edges = list(zip(A.row, A.col))
+            edges_list = [(u, v) for u, v in edges if u < v]
+
+            g_sierpinski = nk.graph.Graph(edges_list)
+            hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
+            print(f"{shape} gasket G={G}: {g_sierpinski.n_nodes} nodes\n")
+
+            vstates = []
+            for seed in seeds:
+                vstate_file = f"data/{shape}/{shape}_gasket_G={G}_seed={seed}.mpack"
+                metadata_file = f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_metadata.json"
+                vstate = load_vstate(vstate_file, metadata_file, hi)
+                vstates.append(vstate)
+
+            fidelities = {}
+            for i in range(len(seeds)):
+                for j in range(i+1, len(seeds)):
+                    fid = compute_fidelity(vstates[i], vstates[j])
+                    fidelities[f"seed{seeds[i]}_seed{seeds[j]}"] = float(fid)
+                    print(f"Fidelity between seed {seeds[i]} and seed {seeds[j]}: {fid}")
+
+            # Store results for this shape and generation.
+            gen_results = {
+                "shape": shape,
+                "generation": G,
+                "seeds": seeds,
+                "fidelities": fidelities,
+                "mean_fidelity": float(np.mean(list(fidelities.values()))),
+                "std_fidelity": float(np.std(list(fidelities.values()))),
+                "min_fidelity": float(np.min(list(fidelities.values()))),
+                "max_fidelity": float(np.max(list(fidelities.values())))
+            }
+
+            print(f"\n{shape} G={G} summary: mean fidelity = {gen_results['mean_fidelity']:.4f} ± {gen_results['std_fidelity']:.4f}")
+
+            filename = f"data/{shape}/fidelity_{shape}_gasket_G={G}.json"
+            with open(filename, "w") as f:
+                json.dump(gen_results, f, indent=2)
+            print(f"Fidelity results saved to {filename}")
