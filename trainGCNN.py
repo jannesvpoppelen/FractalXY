@@ -11,11 +11,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import jax
 import jax.random as jr
-import flax
 import netket as nk
-from netket.operator.spin import sigmax, sigmay, sigmaz
 
 from fractals import honeycomb_gasket, triangular_gasket
+from utils import build_hamiltonian, build_magnetizations, save_vstate, save_metadata
 
 print(f"NetKet {nk.__version__}, Jax {jax.__version__}")
 print(f"JAX is using: {jax.devices()}")
@@ -37,58 +36,6 @@ def normalize_feature_dims(feature_dims, num_layers):
             "Pass an int or a tuple/list with one value per layer."
         )
     return dims
-
-
-def save_vstate(vstate, filename):
-    with open(filename, "wb") as file:
-        file.write(flax.serialization.to_bytes(vstate))
-
-
-def save_metadata(
-    filename,
-    model_config,
-    sampler_config,
-    hamiltonian_config,
-    optimizer_config=None,
-    final_results=None,
-):
-    """Save metadata about model, sampler, and Hamiltonian to JSON."""
-    metadata = {
-        "model": model_config,
-        "sampler": sampler_config,
-        "hamiltonian": hamiltonian_config,
-    }
-    if optimizer_config is not None:
-        metadata["optimizer"] = optimizer_config
-    if final_results is not None:
-        metadata["final_results"] = final_results
-    with open(filename, "w") as f:
-        json.dump(metadata, f, indent=2)
-
-
-def build_hamiltonian(hi, g, J=1.0, Jz=0.0, hx=0.0, hy=0.0):
-    H = nk.operator.LocalOperator(hi, dtype=complex)
-    for i, j in g.edges():
-        H += -J * (sigmax(hi, i) @ sigmax(hi, j) + sigmay(hi, i) @ sigmay(hi, j))
-        if Jz != 0.0:
-            H += -Jz * (sigmaz(hi, i) @ sigmaz(hi, j))
-    if hx != 0.0 or hy != 0.0:
-        for i in range(g.n_nodes):
-            H += -hx * sigmax(hi, i) - hy * sigmay(hi, i)
-    return H
-
-
-def build_magnetizations(hi, g):
-    N = g.n_nodes
-    Mx = sum(sigmax(hi, i) for i in range(N)) / N
-    My = sum(sigmay(hi, i) for i in range(N)) / N
-    Mz = sum(sigmaz(hi, i) for i in range(N)) / N
-
-    return {
-        "Mx": Mx,
-        "My": My,
-        "Mz": Mz,
-    }
 
 
 def run_xy_model(
@@ -352,7 +299,7 @@ if __name__ == "__main__":
     generations = [2]
     seeds = [1]
     shapes = ["hexagonal"]
-    n = 3
+    n = 2
     for shape in shapes:
         for G in generations:
             print(f"\n{'=' * 60}")
@@ -360,9 +307,9 @@ if __name__ == "__main__":
             print(f"{'=' * 60}\n")
 
             if shape == "triangular":
-                A = triangular_gasket(G, n)
+                A, _ = triangular_gasket(G, n)
             else:
-                A = honeycomb_gasket(G, n)
+                A, _ = honeycomb_gasket(G, n)
 
             A = A.tocoo()
             edges = list(zip(A.row, A.col))
