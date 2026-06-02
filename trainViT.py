@@ -265,8 +265,6 @@ def run_xy_model(
 
     hi = nk.hilbert.Spin(s=0.5, N=g.n_nodes)
     H = build_hamiltonian(hi, g, J=J, Jz=Jz, hx=hx, hy=hy)
-    E, _  = nk.exact.lanczos_ed(H, compute_eigenvectors=True, k=3)
-    print(f"Exact ground state energy: {E[0]}")
     distances = patch_distances(patches, x, y)
 
     key = jax.random.key(seed)
@@ -454,7 +452,7 @@ if __name__ == "__main__":
 
 
     shapes = ["honeycomb"]
-    generations = [1]
+    generations = [2]
     n = 2
     seeds = [1]
 
