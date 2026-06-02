@@ -1,9 +1,79 @@
 """Utility functions for graph analysis and operator construction."""
 
+import json
 import numpy as np
 import networkx as nx
 from collections import defaultdict
+import flax
+import netket as nk
 from netket.operator.spin import sigmax, sigmay, sigmaz
+
+
+# -----------------------------------------------------------------------
+# IO utilities
+# -----------------------------------------------------------------------
+
+
+def save_vstate(vstate, filename):
+    with open(filename, "wb") as file:
+        file.write(flax.serialization.to_bytes(vstate))
+
+
+def save_metadata(filename, model_config, sampler_config, hamiltonian_config, optimizer_config=None, final_results=None, **extra_sections):
+    """Save metadata about model, sampler, and Hamiltonian to JSON.
+
+    Extra keyword arguments are added as top-level sections (e.g. fractal={...}).
+    """
+    metadata = {
+        "model": model_config,
+        "sampler": sampler_config,
+        "hamiltonian": hamiltonian_config,
+    }
+    if optimizer_config is not None:
+        metadata["optimizer"] = optimizer_config
+    if final_results is not None:
+        metadata["final_results"] = final_results
+    for key, val in extra_sections.items():
+        if val is not None:
+            metadata[key] = val
+    with open(filename, "w") as f:
+        json.dump(metadata, f, indent=2)
+
+
+# -----------------------------------------------------------------------
+# Physics operators
+# -----------------------------------------------------------------------
+
+
+def build_hamiltonian(hi, g, J=1.0, Jz=0.0, hx=0.0, hy=0.0):
+    H = nk.operator.LocalOperator(hi, dtype=complex)
+    for i, j in g.edges():
+        H += -J * (sigmax(hi, i) @ sigmax(hi, j) + sigmay(hi, i) @ sigmay(hi, j))
+        if Jz != 0.0:
+            H += -Jz * (sigmaz(hi, i) @ sigmaz(hi, j))
+    if hx != 0.0 or hy != 0.0:
+        for i in range(g.n_nodes):
+            H += -hx * sigmax(hi, i) - hy * sigmay(hi, i)
+    return H
+
+
+def build_magnetizations(hi, g):
+    N = g.n_nodes
+    Mx = sum(sigmax(hi, i) for i in range(N)) / N
+    My = sum(sigmay(hi, i) for i in range(N)) / N
+    Mz = sum(sigmaz(hi, i) for i in range(N)) / N
+
+    return {
+        "Mx": Mx,
+        "My": My,
+        "Mz": Mz,
+        "M2_perp": Mx @ Mx + My @ My,
+    }
+
+
+# -----------------------------------------------------------------------
+# Structure factor / k-space utilities
+# -----------------------------------------------------------------------
 
 
 def get_square_positions(L):
