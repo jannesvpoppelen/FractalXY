@@ -13,7 +13,6 @@ from flax import linen as nn
 
 from utils import *
 from gaskets import *
-from train import build_hamiltonian
 
 
 def build_observables(hi, g, positions=None):
@@ -86,6 +85,41 @@ def load_vstate(vstate_file, metadata_file, hi):
     
     with open(vstate_file, 'rb') as vstatefile:
         vstate = flax.serialization.from_bytes(vstate, vstatefile.read())
+    return vstate
+
+
+def load_vstate_vit(vstate_file, metadata_file, hi, patches, distances):
+    from trainViT import ViT
+
+    with open(metadata_file) as f:
+        metadata = json.load(f)
+
+    model_cfg = metadata["model"]
+    sampler_cfg = metadata["sampler"]
+
+    patches_tuple = tuple(map(tuple, patches))
+    distances_tuple = tuple(map(tuple, distances))
+
+    model = ViT(
+        num_layers=model_cfg["num_layers"],
+        d_model=model_cfg["d_model"],
+        n_heads=model_cfg["n_heads"],
+        patches=patches_tuple,
+        distances=distances_tuple,
+    )
+    sampler = nk.sampler.MetropolisLocal(hi, n_chains=sampler_cfg.get("n_chains", 512))
+    vstate = nk.vqs.MCState(
+        sampler,
+        model,
+        n_samples=sampler_cfg.get("n_samples", 2048),
+        n_discard_per_chain=sampler_cfg.get("n_discard_per_chain", 0),
+        seed=0,
+        chunk_size=128,
+    )
+
+    with open(vstate_file, "rb") as f:
+        vstate = flax.serialization.from_bytes(vstate, f.read())
+
     return vstate
 
 
