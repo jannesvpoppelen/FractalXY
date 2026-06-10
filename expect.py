@@ -12,7 +12,7 @@ import flax
 from flax import linen as nn
 
 from utils import *
-from gaskets import *
+from fractals import *
 
 
 def build_observables(hi, g, positions=None):
@@ -121,6 +121,47 @@ def load_vstate_vit(vstate_file, metadata_file, hi, patches, distances):
         vstate = flax.serialization.from_bytes(vstate, f.read())
 
     return vstate
+
+
+def load_vstate_vit_symm(vstate_file, metadata_file, hi, g, patches, distances, character_index=0):
+    """Load a symmetry-projected ViT vstate saved via rep.project()."""
+    from trainViT import ViT
+
+    with open(metadata_file) as f:
+        metadata = json.load(f)
+
+    model_cfg = metadata["model"]
+    sampler_cfg = metadata["sampler"]
+
+    patches_tuple = tuple(map(tuple, patches))
+    distances_tuple = tuple(map(tuple, distances))
+
+    model = ViT(
+        num_layers=model_cfg["num_layers"],
+        d_model=model_cfg["d_model"],
+        n_heads=model_cfg["n_heads"],
+        patches=patches_tuple,
+        distances=distances_tuple,
+    )
+    sampler = nk.sampler.MetropolisLocal(hi, n_chains=sampler_cfg.get("n_chains", 512))
+    vstate = nk.vqs.MCState(
+        sampler,
+        model,
+        n_samples=sampler_cfg.get("n_samples", 2048),
+        n_discard_per_chain=sampler_cfg.get("n_discard_per_chain", 0),
+        seed=0,
+        chunk_size=128,
+    )
+
+    group = g.automorphisms()
+    rep = nk.symmetry.canonical_representation(hilbert=hi, group=group)
+    proj_vstate = rep.project(vstate, character_index=character_index)
+    proj_vstate.chunk_size = vstate.chunk_size
+
+    with open(vstate_file, "rb") as f:
+        proj_vstate = flax.serialization.from_bytes(proj_vstate, f.read())
+
+    return proj_vstate
 
 
 def compute_obs(vstate, obs_dict):
