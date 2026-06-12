@@ -7,8 +7,6 @@ from collections import defaultdict
 
 import numpy as np
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 import jax
 import jax.random as jr
 import netket as nk

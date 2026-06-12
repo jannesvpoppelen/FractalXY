@@ -1,7 +1,6 @@
 """ViT ansatz for the XY model on fractal lattices."""
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import numpy as np
 import time
@@ -451,8 +450,8 @@ if __name__ == "__main__":
     print(f"Default backend: {jax.default_backend()}")
 
 
-    shapes = ["honeycomb"]
-    generations = [2]
+    shapes = ["triangular","honeycomb"]
+    generations = [1, 2, 3, 4]
     n = 2
     seeds = [1]
 
@@ -476,13 +475,13 @@ if __name__ == "__main__":
                         Jz=0.0,
                         hx=0.0,
                         hy=0.0,
-                        num_layers=3,
-                        d_model=40,
-                        n_heads=5,
-                        N_samples=1024,
-                        N_opt=500,
-                        N_symm_opt=100,
-                        n_chains=1024,
+                        num_layers=8,
+                        d_model=72,
+                        n_heads=12,
+                        N_samples=2**13,
+                        N_opt=750,
+                        N_symm_opt=250,
+                        n_chains=2**13,
                         early_stop_patience=150,
                         seed=seed,
                         outfile=f"data/ViT/{name}.mpack",

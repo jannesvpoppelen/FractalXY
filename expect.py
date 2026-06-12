@@ -1,7 +1,5 @@
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 import numpy as np
 import json
 import jax
@@ -185,27 +183,41 @@ def save_obs(obs_dict, filename):
 
 
 if __name__ == "__main__":
-    gens = [4]
-    seeds = [1, 2, 3, 4, 5]
-    #shapes = ['triangular', 'honeycomb']
-    shapes = ['honeycomb']
+    from trainViT import build_fractal, patch_distances
+
+    shapes = ["triangular", "honeycomb"]
+    gens = [3, 4]
+    seeds = [1]
 
     for shape in shapes:
-        for (i, G) in enumerate(gens):
-            if shape == 'triangular':
-                A = t_gasket(G)
-            else:
-                A = h_gasket(G)
-            A = A.tocoo()
-            edges = list(zip(A.row, A.col))
-            edges_list = [(i, j) for i, j in edges if i < j]
-            x, y  = gasket_coordinates(G)
-            vertices = np.column_stack((x, y))
-            g_sierpinski = nk.graph.Graph(edges_list)
-            hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
-            obs_dict = build_observables(hi, g_sierpinski, positions=vertices)
-            for (j, seed) in enumerate(seeds):
-                vstate = load_vstate(f"data/{shape}/{shape}_gasket_G={G}_seed={seed}.mpack", f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_metadata.json", hi)
-                vstate.chunk_size = 512
+        for G in gens:
+            for seed in seeds:
+                name = f"vit_{shape}_G={G}_seed={seed}"
+                metadata_file = f"data/vit/{name}_metadata.json"
+                vstate_file = f"data/vit/{name}.mpack"
+                symm_file = f"data/vit/{name}_symm.mpack"
+
+                with open(metadata_file) as f:
+                    metadata = json.load(f)
+                n = metadata["fractal"]["n"]
+
+                g, patches, x, y = build_fractal(shape, G, n)
+                distances = patch_distances(patches, x, y)
+                hi = nk.hilbert.Spin(s=0.5, N=g.n_nodes)
+
+                positions = np.column_stack((x, y))
+                obs_dict = build_observables(hi, g, positions=positions)
+
+                # Before symmetry projection
+                vstate = load_vstate_vit(vstate_file, metadata_file, hi, patches, distances)
+                vstate.n_samples = 2**12
                 results = compute_obs(vstate, obs_dict)
-                save_obs(results, f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_observables.json")
+                save_obs(results, f"data/vit/{name}_observables.json")
+                print(f"Saved {name}_observables.json")
+
+                # After symmetry projection
+                proj_vstate = load_vstate_vit_symm(symm_file, metadata_file, hi, g, patches, distances)
+                proj_vstate.n_samples = 2**12
+                results_symm = compute_obs(proj_vstate, obs_dict)
+                save_obs(results_symm, f"data/vit/{name}_symm_observables.json")
+                print(f"Saved {name}_symm_observables.json")

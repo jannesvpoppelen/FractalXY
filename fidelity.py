@@ -1,7 +1,6 @@
 import numpy as np
 import json
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import jax
 import netket as nk

@@ -316,28 +316,47 @@ def fidelity_figures():
     plt.savefig("fidelity_heatmaps.png", dpi=300, bbox_inches='tight')
     plt.show()
 
-fidelity_figures()
+# fidelity_figures()
 
 
-# Example usage of plot_correlators:
+
 plot_correlators(
     observables_files=[
-        "data/triangular/triangular_gasket_G=1_seed=1_observables.json",
-        "data/triangular/triangular_gasket_G=2_seed=1_observables.json",
-        "data/triangular/triangular_gasket_G=3_seed=1_observables.json",
-        "data/triangular/triangular_gasket_G=4_seed=1_observables.json"],
+        "data/RBM/triangular/triangular_gasket_G=0_seed=1_observables.json",
+        "data/RBM/triangular/triangular_gasket_G=1_seed=1_observables.json",
+        "data/ViT/triangular/vit_triangular_G=3_seed=1_observables.json",
+        "data/ViT/triangular/vit_triangular_G=4_seed=1_observables.json"],
     labels=["Gen 1", "Gen 2", "Gen 3", "Gen 4"],
     save_prefix="triangle_xy_correlator_analysis"
 )
 
-# Example usage of plot_correlators:
+
 plot_correlators(
     observables_files=[
-        "data/honeycomb/honeycomb_gasket_G=1_seed=1_observables.json",
-        "data/honeycomb/honeycomb_gasket_G=2_seed=1_observables.json",
-        "data/honeycomb/honeycomb_gasket_G=3_seed=1_observables.json",
-        "data/honeycomb/honeycomb_gasket_G=4_seed=1_observables.json"],
+        "data/RBM/honeycomb/honeycomb_gasket_G=0_seed=1_observables.json",
+        "data/RBM/honeycomb/honeycomb_gasket_G=1_seed=1_observables.json",
+        "data/ViT/honeycomb/vit_honeycomb_G=3_seed=1_observables.json",
+        "data/ViT/honeycomb/vit_honeycomb_G=4_seed=1_observables.json"],
     labels=["Gen 1", "Gen 2", "Gen 3", "Gen 4"],
     save_prefix="honeycomb_xy_correlator_analysis"
 )
 
+
+
+plot_correlators(
+    observables_files=[
+        "data/ViT/triangular/vit_triangular_G=3_seed=1_observables.json",
+        "data/ViT/triangular/vit_triangular_G=3_seed=1_symm_observables.json",
+        "data/ViT/triangular/vit_triangular_G=4_seed=1_observables.json",
+        "data/ViT/triangular/vit_triangular_G=4_seed=1_symm_observables.json"],
+    labels=["Gen 3", "Gen 3 symmetry-projected", "Gen 4", "Gen 4 symmetry-projected"],
+    save_prefix="triangle_xy_symm_correlator_analysis"
+)
+
+plot_correlators(
+    observables_files=[
+        "data/ViT/honeycomb/vit_honeycomb_G=3_seed=1_observables.json",
+        "data/ViT/honeycomb/vit_honeycomb_G=3_seed=1_symm_observables.json"],
+    labels=["Gen 3", "Gen 3 symmetry-projected"],
+    save_prefix="honeycomb_xy_symm_correlator_analysis"
+)

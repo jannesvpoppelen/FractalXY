@@ -165,18 +165,23 @@ function plot_sierpinski(frac::Fractal; show_indices=false)
         pv = frac.vertices[v]
         for u in neighbors
             pu = frac.vertices[u]
-            lines!(ax, [real(pv), real(pu)], [imag(pv), imag(pu)], color=:black, linewidth=1)
+            lines!(ax, [real(pv), real(pu)], [imag(pv), imag(pu)], color=:black, linewidth=2)
         end
     end
     
-    scatter!(ax, real.(positions), imag.(positions), color=:purple, markersize=10)
+    scatter!(ax, real.(positions), imag.(positions), color=:black, markersize=13)
     
     if show_indices
         for (i, pos) in enumerate(positions)
             text!(ax, real(pos), imag(pos), text=string(indices[i]), fontsize=25, align=(:left, :center))
         end
     end
+
+    hidedecorations!(ax)
+    hidespines!(ax)
+
     fig
+
 end
 
 frac0 = generate_sierpinski(0);
@@ -187,15 +192,15 @@ frac4 = generate_sierpinski(4);
 frac5 = generate_sierpinski(5);
 frac6 = generate_sierpinski(6);
 
-display(plot_sierpinski(frac0, show_indices=true))
+display(plot_sierpinski(frac0, show_indices=false))
 display(plot_sierpinski(frac1, show_indices=true))
-display(plot_sierpinski(frac2, show_indices=true))
-display(plot_sierpinski(frac3, show_indices=true))
+display(plot_sierpinski(frac2, show_indices=false))
+display(plot_sierpinski(frac3, show_indices=false))
 display(plot_sierpinski(frac4, show_indices=false))
 display(plot_sierpinski(frac5, show_indices=false))
 display(plot_sierpinski(frac6, show_indices=false))
 
-
+save("frac.pdf", plot_sierpinski(frac2, show_indices=false))
 
 e1 = get_edge_list(frac1)
 e2 = get_edge_list(frac2)

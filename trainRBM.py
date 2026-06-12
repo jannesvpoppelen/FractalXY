@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import jax
 import jax.random as jr
