@@ -1,12 +1,10 @@
 """ViT ansatz for the XY model on fractal lattices."""
 
+import json
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import time
 
 import numpy as np
-import time
-from functools import partial
-
 import jax
 import jax.numpy as jnp
 import netket as nk
@@ -43,15 +41,6 @@ class Embed(nn.Module):
         return x
 
 
-@partial(jax.vmap, in_axes=(None, 0, None), out_axes=1)
-@partial(jax.vmap, in_axes=(None, None, 0), out_axes=1)
-def roll2d(spins, i, j):
-    side = int(spins.shape[-1] ** 0.5)
-    spins = spins.reshape(spins.shape[0], side, side)
-    spins = jnp.roll(jnp.roll(spins, i, axis=-2), j, axis=-1)
-    return spins.reshape(spins.shape[0], -1)
-
-
 class FMHA(nn.Module):
     d_model: int
     n_heads: int
@@ -76,8 +65,7 @@ class FMHA(nn.Module):
             (self.n_heads, self.n_patches, self.n_patches),
             self.param_dtype,
         )
-        
-        # Exponent for spatial attention mechanism
+        # decay exponent of the distance weighting
         self.gamma = self.param(
             "gamma",
             lambda rng, shape: jnp.zeros(shape, dtype=self.param_dtype),
@@ -93,10 +81,9 @@ class FMHA(nn.Module):
             n_heads=self.n_heads,
         )
         v = rearrange(v, "batch n_patches n_heads d_eff -> batch n_heads n_patches d_eff")
-        
-        # Compute spatial attention weights based on distances
-        # A_i = sum_j alpha_ij * w_ij * v_j, where w_ij = (1 + d_ij)^(-gamma)/sum_k (1 + d_ik)^(-gamma)
-        w = (1 + self.jnp_distances) ** (-self.gamma)
+
+        # A_i = sum_j alpha_ij w_ij v_j,  w_ij = (1 + d_ij)^-gamma / sum_k (1 + d_ik)^-gamma
+        w =(1 + self.jnp_distances) ** (-self.gamma)
         w = w / w.sum(axis=-1, keepdims=True)
         spatial_alpha = self.alpha * w[None, :, :]
         x = jnp.matmul(spatial_alpha[None, ...], v)
@@ -260,14 +247,18 @@ def run_xy_model(
     outfile=None,
     fractal_config=None,
     N_symm_opt=None,
+    H=None,
+    hamiltonian_config=None,
 ):
     start_time = time.time()
 
     hi = nk.hilbert.Spin(s=0.5, N=g.n_nodes)
-    H = build_hamiltonian(hi, g, J=J, Jz=Jz, hx=hx, hy=hy)
+    if H is None:
+        H = build_hamiltonian(hi, g, J=J, Jz=Jz, hx=hx, hy=hy)
     distances = patch_distances(patches, x, y)
 
     key = jax.random.key(seed)
+    key, subkey = jax.random.split(key)
     patches_tuple = tuple(map(tuple, patches))
     distances_tuple = tuple(map(tuple, distances))
 
@@ -311,7 +302,7 @@ def run_xy_model(
     vmc = nk.driver.VMC_SR(
         hamiltonian=H,
         optimizer=optimizer,
-        diag_shift=1e-4,
+        diag_shift=5e-4,
         variational_state=vstate,
         momentum=0.8,
         mode="complex",
@@ -362,8 +353,8 @@ def run_xy_model(
         proj_vstate.chunk_size = vstate.chunk_size
 
         symm_lr_schedule = optax.exponential_decay(
-            init_value=1e-3,
-            transition_steps=100,
+            init_value=1e-4,
+            transition_steps=50,
             decay_rate=0.995,
         )
         symm_optimizer = nk.optimizer.Sgd(learning_rate=symm_lr_schedule)
@@ -406,7 +397,8 @@ def run_xy_model(
             "n_discard_per_chain": 0,
             "seed": seed,
         }
-        hamiltonian_config = {"J": J, "Jz": Jz, "hx": float(hx), "hy": float(hy)}
+        if hamiltonian_config is None:
+            hamiltonian_config = {"J": J, "Jz": Jz, "hx": float(hx), "hy": float(hy)}
         final_results = {
             "final_energy": final_energy,
             "final_variance": final_variance,
@@ -427,6 +419,17 @@ def run_xy_model(
             fractal=fractal_config,
         )
         print(f"Saved vstate to {outfile} and metadata to {metadata_file}")
+
+        history_file = outfile.replace(".mpack", "_energy_history.json")
+        with open(history_file, "w") as f:
+            json.dump({
+                "energies": energies,
+                "variances": variances,
+                "symm_start_iter": len(energies),
+                "symm_energies": symm_energies,
+                "symm_variances": symm_variances,
+            }, f, indent=2)
+        print(f"Saved energy history to {history_file}")
 
     return {
         "vstate": vstate,
@@ -451,10 +454,10 @@ if __name__ == "__main__":
     print(f"Default backend: {jax.default_backend()}")
 
 
-    shapes = ["honeycomb"]
-    generations = [2]
+    shapes = ["triangular", "honeycomb"]
+    generations = [1, 2, 3, 4, 5]
     n = 2
-    seeds = [1]
+    seeds = [1, 2, 3, 4, 5]
 
     for shape in shapes:
         for G in generations:
@@ -463,7 +466,7 @@ if __name__ == "__main__":
                 print(f"{shape} gasket G={G}: {g.n_nodes} nodes")
                 print(f"{'='*60}")
 
-                os.makedirs("data/ViT", exist_ok=True)
+                os.makedirs(f"data/ViT/{shape}", exist_ok=True)
                 for seed in seeds:
                     name = f"vit_{shape}_G={G}_seed={seed}"
                     run_xy_model(
@@ -476,15 +479,15 @@ if __name__ == "__main__":
                         Jz=0.0,
                         hx=0.0,
                         hy=0.0,
-                        num_layers=3,
-                        d_model=40,
-                        n_heads=5,
-                        N_samples=1024,
-                        N_opt=500,
-                        N_symm_opt=100,
-                        n_chains=1024,
-                        early_stop_patience=150,
+                        num_layers=4,
+                        d_model=48,
+                        n_heads=6,
+                        N_samples=2**13,
+                        N_opt=750,
+                        N_symm_opt=50,
+                        n_chains=2**13,
+                        early_stop_patience=10**9,  # no early stopping
                         seed=seed,
-                        outfile=f"data/ViT/{name}.mpack",
+                        outfile=f"data/ViT/{shape}/{name}.mpack",
                         fractal_config={"shape": shape, "G": G, "n": n},
                     )

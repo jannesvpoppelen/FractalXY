@@ -1,106 +1,92 @@
-import numpy as np
+import gc
 import json
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+import numpy as np
 import jax
 import netket as nk
-from netket.operator.spin import sigmax, sigmay, sigmaz
 from netket.experimental.observable import InfidelityOperator
-import flax
-from flax import linen as nn
-from utils import *
-from gaskets import *
+
+from trainViT import build_fractal, patch_distances
+from expect import load_vstate_vit, load_vstate_vit_symm
 
 print(f"NetKet {nk.__version__}, Jax {jax.__version__}")
 print(f"JAX is using: {jax.devices()}")
-print(f"Default backend: {jax.default_backend()}")
 
-
-def load_vstate(vstate_file, metadata_file, hi):
-    
-    with open(metadata_file, 'r') as metafile:
-        metadata = json.load(metafile)
-        model_config = metadata["model"]
-        sampler_config = metadata["sampler"]
-        hamiltonian_config = metadata["hamiltonian"]
-        
-        
-    alpha = model_config.get("alpha", 1)
-    n_chains = sampler_config.get("n_chains", 32)
-    n_samples = sampler_config.get("n_samples", 2**16)
-    n_discard_per_chain = sampler_config.get("n_discard_per_chain", 2**7)
-    seed = sampler_config.get("seed", None)
-        
-    model = nk.models.RBM(alpha=alpha, kernel_init=nn.initializers.normal(stddev=0.01), hidden_bias_init=nn.initializers.normal(stddev=0.01))
-    sampler = nk.sampler.MetropolisLocal(hi, n_chains=n_chains)
-    vstate = nk.vqs.MCState(sampler, model, n_samples=n_samples, n_discard_per_chain=n_discard_per_chain, seed=seed)
-    
-    with open(vstate_file, 'rb') as vstatefile:
-        vstate = flax.serialization.from_bytes(vstate, vstatefile.read())
-    return vstate
+SKIP_SYMM_GENS = {5}  # no projected states saved for these
 
 
 def compute_fidelity(vstate1, vstate2):
-# Use fidelity estimator to compare different variational states
-    obs = InfidelityOperator(vstate1)
+    # cv_coeff=None: the default control-variate estimator is unbounded below and
+    # blows up when psi_1/psi_2 has heavy tails on the samples
+    obs = InfidelityOperator(vstate1, cv_coeff=None)
+    vstate2.n_samples = 2**13
     result = vstate2.expect(obs)
-    fidelity = 1.0 - result.mean.item()
-    return fidelity
+    fidelity = 1.0 - complex(result.mean.item())
+    if abs(fidelity.imag) > 1e-2:
+        print(f"  warning: Im F = {fidelity.imag:.3g}")
+    return fidelity.real
+
+
+def compute_pairwise_fidelities(vstates, seeds):
+    fidelities = {}
+    for i in range(len(seeds)):
+        for j in range(i + 1, len(seeds)):
+            fid = compute_fidelity(vstates[i], vstates[j])
+            fidelities[f"seed{seeds[i]}_seed{seeds[j]}"] = float(fid)
+            print(f"  F(seed {seeds[i]}, seed {seeds[j]}) = {fid}")
+    return fidelities
+
+
+def summarize_fidelities(shape, G, seeds, fidelities):
+    values = list(fidelities.values())
+    return {
+        "shape": shape,
+        "generation": G,
+        "seeds": seeds,
+        "fidelities": fidelities,
+        "mean_fidelity": float(np.mean(values)),
+        "std_fidelity": float(np.std(values)),
+        "min_fidelity": float(np.min(values)),
+        "max_fidelity": float(np.max(values)),
+    }
+
+
+def run(shape, G, seeds, hi, g, patches, distances, symm):
+    vstates = []
+    for seed in seeds:
+        base = f"data/ViT/{shape}/vit_{shape}_G={G}_seed={seed}"
+        if symm:
+            vstates.append(load_vstate_vit_symm(f"{base}_symm.mpack", f"{base}_metadata.json", hi, g, patches, distances))
+        else:
+            vstates.append(load_vstate_vit(f"{base}.mpack", f"{base}_metadata.json", hi, patches, distances))
+
+    print("After symmetry projection:" if symm else "Before symmetry projection:")
+    results = summarize_fidelities(shape, G, seeds, compute_pairwise_fidelities(vstates, seeds))
+    print(f"  mean F = {results['mean_fidelity']:.4f} ± {results['std_fidelity']:.4f}")
+
+    filename = f"data/ViT/{shape}/fidelity_{shape}_gasket_G={G}{'_symm' if symm else ''}.json"
+    with open(filename, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"Saved {filename}")
+
+    del vstates
+    gc.collect()
+    jax.clear_caches()
 
 
 if __name__ == "__main__":
-    gens = [1, 2, 3, 4]
+    gens = [1, 2, 3, 4, 5]
     seeds = [1, 2, 3, 4, 5]
-    shapes = ['triangular', 'honeycomb']
+    shapes = ["triangular", "honeycomb"]
+    n = 2
 
     for shape in shapes:
         for G in gens:
-            print(f"\n{'='*60}")
-            print(f"Fidelity comparisons for {shape} gasket, G={G}")
-            print(f"{'='*60}\n")
+            g, patches, x, y = build_fractal(shape, G, n)
+            distances = patch_distances(patches, x, y)
+            hi = nk.hilbert.Spin(s=0.5, N=g.n_nodes)
+            print(f"\n{shape} gasket G={G}: {g.n_nodes} nodes")
 
-            if shape == 'triangular':
-                A = t_gasket(G)
-            else:
-                A = h_gasket(G)
-            A = A.tocoo()
-            edges = list(zip(A.row, A.col))
-            edges_list = [(u, v) for u, v in edges if u < v]
-
-            g_sierpinski = nk.graph.Graph(edges_list)
-            hi = nk.hilbert.Spin(s=0.5, N=g_sierpinski.n_nodes)
-            print(f"{shape} gasket G={G}: {g_sierpinski.n_nodes} nodes\n")
-
-            vstates = []
-            for seed in seeds:
-                vstate_file = f"data/{shape}/{shape}_gasket_G={G}_seed={seed}.mpack"
-                metadata_file = f"data/{shape}/{shape}_gasket_G={G}_seed={seed}_metadata.json"
-                vstate = load_vstate(vstate_file, metadata_file, hi)
-                vstates.append(vstate)
-
-            fidelities = {}
-            for i in range(len(seeds)):
-                for j in range(i+1, len(seeds)):
-                    fid = compute_fidelity(vstates[i], vstates[j])
-                    fidelities[f"seed{seeds[i]}_seed{seeds[j]}"] = float(fid)
-                    print(f"Fidelity between seed {seeds[i]} and seed {seeds[j]}: {fid}")
-
-            # Store results for this shape and generation.
-            gen_results = {
-                "shape": shape,
-                "generation": G,
-                "seeds": seeds,
-                "fidelities": fidelities,
-                "mean_fidelity": float(np.mean(list(fidelities.values()))),
-                "std_fidelity": float(np.std(list(fidelities.values()))),
-                "min_fidelity": float(np.min(list(fidelities.values()))),
-                "max_fidelity": float(np.max(list(fidelities.values())))
-            }
-
-            print(f"\n{shape} G={G} summary: mean fidelity = {gen_results['mean_fidelity']:.4f} ± {gen_results['std_fidelity']:.4f}")
-
-            filename = f"data/{shape}/fidelity_{shape}_gasket_G={G}.json"
-            with open(filename, "w") as f:
-                json.dump(gen_results, f, indent=2)
-            print(f"Fidelity results saved to {filename}")
+            run(shape, G, seeds, hi, g, patches, distances, symm=False)
+            if G not in SKIP_SYMM_GENS:
+                run(shape, G, seeds, hi, g, patches, distances, symm=True)

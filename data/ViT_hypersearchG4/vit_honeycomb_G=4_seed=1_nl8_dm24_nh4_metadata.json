@@ -1,0 +1,35 @@
+{
+  "model": {
+    "type": "ViT",
+    "num_layers": 8,
+    "d_model": 24,
+    "n_heads": 4
+  },
+  "sampler": {
+    "type": "MetropolisLocal",
+    "n_chains": 4096,
+    "n_samples": 4096,
+    "n_discard_per_chain": 0,
+    "seed": 1
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "final_results": {
+    "final_energy": -288.69878806182265,
+    "final_variance": 0.009862862885733093,
+    "training_time": 3225.8840141296387,
+    "n_params": 259616,
+    "stopped_at_iter": 750,
+    "symm_final_energy": -288.69956322381256,
+    "symm_final_variance": 0.00470801917644263
+  },
+  "fractal": {
+    "shape": "honeycomb",
+    "G": 4,
+    "n": 2
+  }
+}

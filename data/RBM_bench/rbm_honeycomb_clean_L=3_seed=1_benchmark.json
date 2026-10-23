@@ -1,0 +1,16 @@
+{
+  "name": "rbm_honeycomb_clean_L=3_seed=1",
+  "shape": "honeycomb",
+  "lattice": "clean",
+  "size": 3,
+  "seed": 1,
+  "N": 9,
+  "n_bonds": 9,
+  "E_vmc": -11.056144846892671,
+  "E_vmc_err": 0.0012000929856180928,
+  "E_vmc_per_site": -1.2284605385436302,
+  "E_ed": -11.063171918882098,
+  "E_ed_per_site": -1.2292413243202331,
+  "rel_error": 0.0006351769674150399,
+  "abs_error_per_site": 0.0007807857766029732
+}

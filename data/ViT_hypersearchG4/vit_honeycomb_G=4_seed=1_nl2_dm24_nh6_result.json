@@ -1,0 +1,15 @@
+{
+  "shape": "honeycomb",
+  "G": 4,
+  "seed": 1,
+  "num_layers": 2,
+  "d_model": 24,
+  "n_heads": 6,
+  "n_params": 92246,
+  "final_energy": -288.6972932228319,
+  "final_variance": 0.02686278228456391,
+  "stopped_at_iter": 750,
+  "training_time": 925.3576538562775,
+  "symm_final_energy": -288.68670619830635,
+  "symm_final_variance": 0.8174176902262735
+}

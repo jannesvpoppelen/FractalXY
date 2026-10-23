@@ -1,0 +1,16 @@
+{
+  "name": "rbm_triangular_clean_L=5_seed=1",
+  "shape": "triangular",
+  "lattice": "clean",
+  "size": 5,
+  "seed": 1,
+  "N": 15,
+  "n_bonds": 30,
+  "E_vmc": -34.00981387390753,
+  "E_vmc_err": 0.0017693941598822683,
+  "E_vmc_per_site": -2.267320924927169,
+  "E_ed": -34.01592189056761,
+  "E_ed_per_site": -2.2677281260378406,
+  "rel_error": 0.00017956346089131238,
+  "abs_error_per_site": 0.00040720111067192496
+}

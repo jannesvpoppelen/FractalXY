@@ -302,12 +302,6 @@ def honeycomb_gasket(G,n):
     right_vertex = n - 1
     Nsites_a = (n+1)*(n)//2
     Nsites_b = n*(n+1)//2
-    # patch1_a = np.array([0,1,2])
-    # patch2_a = np.array([3,2,4])
-    # patch3_a = np.array([4,5,2])
-
-    # patches_a = np.array([[0,1,2],[3,2,4],[4,5,2]])
-    # all_patches_a = patches_a
     for i in range(G):
         Nsites_i_a = (3**i*(n*(n+1)-3)+3)//2
         Nsites_ip = (3**(i+2)+3)//2 - 1
@@ -349,9 +343,32 @@ def honeycomb_gasket(G,n):
     all_patches_b = (np.arange(3**(G)*n*(n-1)//2)  + all_patches_a.max() + 1 ).reshape((-1,n*(n-1)//2))
     all_patches = np.hstack((all_patches_a, all_patches_b))
 
-    k = sp.bmat([[None,k.T],    
+    k = sp.bmat([[None,k.T],
                 [k,None]])
     return k.tocsr(), all_patches
+
+
+def triangular_lattice(L):
+    """Hole-free triangular patch of linear size L (L(L+1)/2 sites), same outline
+    as the gasket. L = 3, 5, 9, 13 give N = 6, 15, 45, 91."""
+    A, x, y = triangular_patch(L)
+    return sp.csr_matrix(A), np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+
+
+def honeycomb_lattice(n):
+    """Hole-free honeycomb patch (n^2 sites), ordered and placed like
+    honeycomb_gasket(G=0, n). n = 3, 5, 9, 13 give N = 9, 25, 81, 169."""
+    k = honeycomb_patch(n)
+    A = sp.bmat([[None, k.T], [k, None]], format="csr")
+
+    _, xa, ya = triangular_patch(n)
+    _, xb, yb = triangular_patch(n - 1)
+    xb = np.asarray(xb, dtype=float) + 0.5
+    yb = np.asarray(yb, dtype=float) + np.sqrt(3) / 6
+    x = np.hstack((xa, xb))
+    y = np.hstack((ya, yb))
+    return sp.csr_matrix(A), np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+
 
 def plot_graph(A,x,y):
     graph = nx.from_numpy_array(A)  # Replace with your actual adjacency matrix
@@ -365,49 +382,3 @@ def plot_graph(A,x,y):
         connectionstyle=f'arc3,rad={0.2}'
     )
     plt.axis('equal')
-
-# %%
-# G = 3
-# n = 2
-# x,y = carpet_coordinates(G, n)
-# adj = carpet(G, n)
-# plot_graph(adj, x, y)
- # %%
-# G = 1
-# n = 2
-# adj, all_patches = triangular_gasket(G,n)
-# xa, ya, _, _ = honeycomb_gasket_coordinates(G,n)
-# plt.plot(xa, ya)
-# plot_graph(adj, xa, ya)
-# %%
-# G = 3
-# n = 2
-# xa, ya, xb, yb = honeycomb_gasket_coordinates(G,n)
-# x,y = np.hstack((xa,xb)), np.hstack((ya,yb))
-# adj, all_patches = honeycomb_gasket(G,n)
-# plot_graph(adj, x, y)
-# plt.scatter(xa,ya,c='k')
-# colors = plt.cm.tab10(np.arange(len(all_patches)))
-# for i in range(1):
-#     for j in all_patches[i]:
-#         plt.scatter(xa[j],ya[j],c=colors[i])
-        
-# plt.show()
-#%%
-# G = nx.from_numpy_array(adj, create_using=nx.MultiDiGraph)
-# pos = {i: (xa[i], ya[i]) for i in range(len(xa))}
-# nx.draw_networkx(
-#     G,
-#     pos=pos,
-#     node_size=10,
-#     with_labels=False,
-#     arrows=True,
-#     arrowsize=1/2,
-#     connectionstyle="arc3,rad=0.15",
-#     arrowstyle=patches.ArrowStyle(
-#         "Fancy",
-#         head_length=2.5/2,
-#         head_width=1./2,
-#         tail_width=.2/2,
-#     ),
-# )

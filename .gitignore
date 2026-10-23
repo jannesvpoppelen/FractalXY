@@ -1,2 +1,6 @@
-
-__pycache__/utils.cpython-312.pyc
+__pycache__/
+*.pyc
+batchscripts/
+logs/
+junk/
+clusterfiles/
