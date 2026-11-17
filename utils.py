@@ -89,20 +89,26 @@ def get_extremal_corners(positions):
     return int(bottom_left), int(bottom_right), int(top)
 
 
-def build_corner_path_correlators(hi, g, positions):
-    """C_xy along the shortest paths between the three outer corners, averaged per
-    graph distance. These paths run along the outer boundary of the gasket."""
+def get_corner_path_pairs(g, positions):
+    """Pairs (i, j) on the shortest paths between the three outer corners, grouped by graph
+    distance and sorted by it. A pair on two paths is listed twice (and counts twice)."""
     G = to_networkx(g)
     bottom_left, bottom_right, top = get_extremal_corners(positions)
     corners = [(bottom_left, bottom_right), (bottom_left, top), (bottom_right, top)]
 
-    correlators = defaultdict(list)
+    pairs = defaultdict(list)
     for source, target in corners:
         path = nx.shortest_path(G, source=source, target=target)
         for a in range(len(path)):
             for b in range(a + 1, len(path)):
                 i, j = path[a], path[b]
-                d = nx.shortest_path_length(G, i, j)
-                correlators[d].append(sigmax(hi, i) @ sigmax(hi, j) + sigmay(hi, i) @ sigmay(hi, j))
+                pairs[nx.shortest_path_length(G, i, j)].append((i, j))
+    return dict(sorted(pairs.items()))
 
-    return {f"Cxy_corner_d{d}": sum(ops) / len(ops) for d, ops in sorted(correlators.items())}
+
+def build_corner_path_correlators(hi, g, positions):
+    """C_xy along the shortest paths between the three outer corners, averaged per
+    graph distance. These paths run along the outer boundary of the gasket."""
+    return {f"Cxy_corner_d{d}": sum(sigmax(hi, i) @ sigmax(hi, j) + sigmay(hi, i) @ sigmay(hi, j)
+                                    for i, j in pairs) / len(pairs)
+            for d, pairs in get_corner_path_pairs(g, positions).items()}
