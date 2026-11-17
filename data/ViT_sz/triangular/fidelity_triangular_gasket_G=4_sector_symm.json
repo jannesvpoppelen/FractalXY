@@ -1,0 +1,153 @@
+{
+  "shape": "triangular",
+  "generation": 4,
+  "n_sites": 123,
+  "sector_sz": 0.5,
+  "c3v": true,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "fidelities": {
+    "seed1_seed2": 0.9999905449313724,
+    "seed1_seed3": 1.0000703214141502,
+    "seed1_seed4": 1.000009586271914,
+    "seed1_seed5": 0.9999316293232907,
+    "seed2_seed3": 1.0000031737939161,
+    "seed2_seed4": 1.0000056571501994,
+    "seed2_seed5": 0.9998608896420366,
+    "seed3_seed4": 1.0000102965480273,
+    "seed3_seed5": 0.9999230435529168,
+    "seed4_seed5": 0.9999826941809614
+  },
+  "fidelities_ij": {
+    "seed1_seed2": 0.999981629387092,
+    "seed1_seed3": 1.000089926536885,
+    "seed1_seed4": 0.9999769504466041,
+    "seed1_seed5": 0.9999395830105173,
+    "seed2_seed3": 1.0000147064166698,
+    "seed2_seed4": 1.000022271482896,
+    "seed2_seed5": 0.999819040893883,
+    "seed3_seed4": 1.0000487315854953,
+    "seed3_seed5": 0.9999326637203609,
+    "seed4_seed5": 0.9999738507005063
+  },
+  "fidelities_ji": {
+    "seed1_seed2": 0.9999994604756529,
+    "seed1_seed3": 1.0000507162914154,
+    "seed1_seed4": 1.0000422220972243,
+    "seed1_seed5": 0.9999236756360641,
+    "seed2_seed3": 0.9999916411711627,
+    "seed2_seed4": 0.9999890428175027,
+    "seed2_seed5": 0.9999027383901902,
+    "seed3_seed4": 0.9999718615105593,
+    "seed3_seed5": 0.9999134233854727,
+    "seed4_seed5": 0.9999915376614166
+  },
+  "fidelity_errors": {
+    "seed1_seed2": 4.969467599332113e-05,
+    "seed1_seed3": 3.093967811243783e-05,
+    "seed1_seed4": 2.6690180293184177e-05,
+    "seed1_seed5": 3.319277815269548e-05,
+    "seed2_seed3": 5.7997956507849265e-05,
+    "seed2_seed4": 5.5207119040580495e-05,
+    "seed2_seed5": 5.2176296888181604e-05,
+    "seed3_seed4": 3.4256201810016484e-05,
+    "seed3_seed5": 2.8949658616669283e-05,
+    "seed4_seed5": 3.0095698033573372e-05
+  },
+  "mean_fidelity": 0.9999787836808786,
+  "std_fidelity": 5.5696675586190937e-05,
+  "min_fidelity": 0.9998608896420366,
+  "max_fidelity": 1.0000703214141502,
+  "energies": {
+    "1": {
+      "mean": -273.99182291688055,
+      "error": 0.0006946941431067914,
+      "variance": 0.003953458810608675
+    },
+    "2": {
+      "mean": -273.99250597495654,
+      "error": 0.0004838196685071338,
+      "variance": 0.0019175954156286186
+    },
+    "3": {
+      "mean": -273.9930191095323,
+      "error": 0.000536166553174737,
+      "variance": 0.002354991699912934
+    },
+    "4": {
+      "mean": -273.9926374356128,
+      "error": 0.0007839921129078984,
+      "variance": 0.005035160642369871
+    },
+    "5": {
+      "mean": -273.9920154328375,
+      "error": 0.0006818959107838908,
+      "variance": 0.0038091328155139435
+    }
+  },
+  "ed_sector_energies": null,
+  "states": {
+    "1": {
+      "source": "data/ViT_sz/triangular/vit_triangular_G=4_seed=1_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "2": {
+      "source": "data/ViT_sz/triangular/vit_triangular_G=4_seed=2_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "3": {
+      "source": "data/ViT_sz/triangular/vit_triangular_G=4_seed=3_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "4": {
+      "source": "data/ViT_sz/triangular/vit_triangular_G=4_seed=4_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "5": {
+      "source": "data/ViT_sz/triangular/vit_triangular_G=4_seed=5_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    }
+  },
+  "exact": false,
+  "sampling": {
+    "n_chains": 1024,
+    "n_samples": 8192,
+    "n_discard_per_chain": 64
+  },
+  "source": "data/ViT_sz"
+}

@@ -1,0 +1,156 @@
+{
+  "shape": "honeycomb",
+  "generation": 1,
+  "n_sites": 9,
+  "sector_sz": 0.5,
+  "c3v": true,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "fidelities": {
+    "seed1_seed2": 0.9999999999990781,
+    "seed1_seed3": 0.9999999999624318,
+    "seed1_seed4": 0.9999999999835332,
+    "seed1_seed5": 0.9999999999721421,
+    "seed2_seed3": 0.9999999999605482,
+    "seed2_seed4": 0.9999999999865179,
+    "seed2_seed5": 0.9999999999744247,
+    "seed3_seed4": 0.9999999999012972,
+    "seed3_seed5": 0.9999999999876943,
+    "seed4_seed5": 0.9999999999329148
+  },
+  "fidelities_ij": {
+    "seed1_seed2": 0.9999999999990781,
+    "seed1_seed3": 0.9999999999624318,
+    "seed1_seed4": 0.9999999999835332,
+    "seed1_seed5": 0.9999999999721421,
+    "seed2_seed3": 0.9999999999605482,
+    "seed2_seed4": 0.9999999999865179,
+    "seed2_seed5": 0.9999999999744247,
+    "seed3_seed4": 0.9999999999012972,
+    "seed3_seed5": 0.9999999999876943,
+    "seed4_seed5": 0.9999999999329148
+  },
+  "fidelities_ji": {
+    "seed1_seed2": 0.9999999999990781,
+    "seed1_seed3": 0.9999999999624318,
+    "seed1_seed4": 0.9999999999835332,
+    "seed1_seed5": 0.9999999999721421,
+    "seed2_seed3": 0.9999999999605482,
+    "seed2_seed4": 0.9999999999865179,
+    "seed2_seed5": 0.9999999999744247,
+    "seed3_seed4": 0.9999999999012972,
+    "seed3_seed5": 0.9999999999876943,
+    "seed4_seed5": 0.9999999999329148
+  },
+  "fidelity_errors": {
+    "seed1_seed2": 0.0,
+    "seed1_seed3": 0.0,
+    "seed1_seed4": 0.0,
+    "seed1_seed5": 0.0,
+    "seed2_seed3": 0.0,
+    "seed2_seed4": 0.0,
+    "seed2_seed5": 0.0,
+    "seed3_seed4": 0.0,
+    "seed3_seed5": 0.0,
+    "seed4_seed5": 0.0
+  },
+  "mean_fidelity": 0.999999999966058,
+  "std_fidelity": 2.7794612108862063e-11,
+  "min_fidelity": 0.9999999999012972,
+  "max_fidelity": 0.9999999999990781,
+  "energies": {
+    "1": {
+      "mean": -11.063171918853655,
+      "error": 0.0,
+      "variance": 8.886047453415813e-11
+    },
+    "2": {
+      "mean": -11.063171918851415,
+      "error": 0.0,
+      "variance": 9.335110462416196e-11
+    },
+    "3": {
+      "mean": -11.063171918851864,
+      "error": 0.0,
+      "variance": 9.271161616197787e-11
+    },
+    "4": {
+      "mean": -11.06317191874078,
+      "error": 0.0,
+      "variance": 4.2948045120283496e-10
+    },
+    "5": {
+      "mean": -11.063171918853543,
+      "error": 0.0,
+      "variance": 9.318057436757954e-11
+    }
+  },
+  "ed_sector_energies": [
+    -11.063171918882066,
+    -9.421218665820383
+  ],
+  "states": {
+    "1": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=1_seed=1_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "2": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=1_seed=2_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "3": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=1_seed=3_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "4": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=1_seed=4_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "5": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=1_seed=5_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    }
+  },
+  "exact": true,
+  "sampling": {
+    "n_chains": 1024,
+    "n_samples": 8192,
+    "n_discard_per_chain": 64
+  },
+  "source": "data/ViT_sz"
+}

@@ -1,0 +1,153 @@
+{
+  "shape": "honeycomb",
+  "generation": 3,
+  "n_sites": 69,
+  "sector_sz": 0.5,
+  "c3v": true,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "fidelities": {
+    "seed1_seed2": 1.0001344609952696,
+    "seed1_seed3": 1.0000999693978712,
+    "seed1_seed4": 0.9998737012079513,
+    "seed1_seed5": 1.000033583532995,
+    "seed2_seed3": 1.0000457008247619,
+    "seed2_seed4": 0.9998600217929193,
+    "seed2_seed5": 0.9999787972283745,
+    "seed3_seed4": 0.9998569802471357,
+    "seed3_seed5": 0.9999496095581173,
+    "seed4_seed5": 0.9997561048221771
+  },
+  "fidelities_ij": {
+    "seed1_seed2": 1.0000829882759388,
+    "seed1_seed3": 1.000132504857497,
+    "seed1_seed4": 0.9997685264972993,
+    "seed1_seed5": 1.0001058829562852,
+    "seed2_seed3": 1.000083843927984,
+    "seed2_seed4": 0.9997704955503424,
+    "seed2_seed5": 0.9999584856534867,
+    "seed3_seed4": 0.9998371016039631,
+    "seed3_seed5": 0.9999956877837332,
+    "seed4_seed5": 0.9997428716633621
+  },
+  "fidelities_ji": {
+    "seed1_seed2": 1.0001859337146004,
+    "seed1_seed3": 1.0000674339382454,
+    "seed1_seed4": 0.9999788759186031,
+    "seed1_seed5": 0.9999612841097046,
+    "seed2_seed3": 1.0000075577215395,
+    "seed2_seed4": 0.9999495480354963,
+    "seed2_seed5": 0.9999991088032624,
+    "seed3_seed4": 0.9998768588903082,
+    "seed3_seed5": 0.9999035313325015,
+    "seed4_seed5": 0.9997693379809922
+  },
+  "fidelity_errors": {
+    "seed1_seed2": 4.579574903277716e-05,
+    "seed1_seed3": 3.674438328179777e-05,
+    "seed1_seed4": 6.577434892327101e-05,
+    "seed1_seed5": 3.288530488622312e-05,
+    "seed2_seed3": 4.5642540012537346e-05,
+    "seed2_seed4": 6.197745280750409e-05,
+    "seed2_seed5": 2.9534728605892002e-05,
+    "seed3_seed4": 7.767984246456572e-05,
+    "seed3_seed5": 3.593237806166557e-05,
+    "seed4_seed5": 5.5201855265897155e-05
+  },
+  "mean_fidelity": 0.9999588929607572,
+  "std_fidelity": 0.00011526739219821452,
+  "min_fidelity": 0.9997561048221771,
+  "max_fidelity": 1.0001344609952696,
+  "energies": {
+    "1": {
+      "mean": -96.51456268295718,
+      "error": 0.0003771220621223652,
+      "variance": 0.0011650748394653704
+    },
+    "2": {
+      "mean": -96.51328620626828,
+      "error": 0.00045515300377971127,
+      "variance": 0.0016970895921126921
+    },
+    "3": {
+      "mean": -96.51403571939821,
+      "error": 0.0004467556327439058,
+      "variance": 0.0016350461574218354
+    },
+    "4": {
+      "mean": -96.51455974276536,
+      "error": 0.0004269898305025718,
+      "variance": 0.001493568023368622
+    },
+    "5": {
+      "mean": -96.51401147685063,
+      "error": 0.00044164078524502713,
+      "variance": 0.0015978216095075876
+    }
+  },
+  "ed_sector_energies": null,
+  "states": {
+    "1": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=3_seed=1_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "2": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=3_seed=2_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "3": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=3_seed=3_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "4": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=3_seed=4_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    },
+    "5": {
+      "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=3_seed=5_symm.mpack",
+      "c3v": true,
+      "flipped": false,
+      "sector_weights": null,
+      "weight_kept": 1.0,
+      "chains": "restored",
+      "n_chains": 8192,
+      "n_discard_per_chain": 16
+    }
+  },
+  "exact": false,
+  "sampling": {
+    "n_chains": 1024,
+    "n_samples": 8192,
+    "n_discard_per_chain": 64
+  },
+  "source": "data/ViT_sz"
+}

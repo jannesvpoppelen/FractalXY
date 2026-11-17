@@ -1,0 +1,55 @@
+{
+  "model": {
+    "type": "ViT",
+    "num_layers": 4,
+    "d_model": 48,
+    "n_heads": 6
+  },
+  "sampler": {
+    "type": "MetropolisExchange",
+    "n_chains": 1024,
+    "n_samples": 8192,
+    "n_discard_per_chain": 4,
+    "eval_n_discard_per_chain": 64,
+    "seed": 4,
+    "total_sz": 0.0,
+    "c3v": true
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "optimizer": {
+    "type": "exact SR (full sum)",
+    "lr": 0.01,
+    "diag_shift": 0.0001,
+    "momentum": null,
+    "n_opt": 300,
+    "steps_done": 54
+  },
+  "final_results": {
+    "exact": true,
+    "final_energy": -11.062257748287731,
+    "final_energy_error": 0.0,
+    "final_variance": 7.669598289794521e-11,
+    "train_energy_last50": -11.062257744630408,
+    "ed_sector_energy": -11.062257748298544,
+    "training_time": 11.273571491241455
+  },
+  "fractal": {
+    "shape": "triangular",
+    "G": 1,
+    "n": 2
+  },
+  "warm_start": {
+    "source": "data/ViT/triangular/vit_triangular_G=1_seed=4_symm.mpack",
+    "c3v": true,
+    "flipped": false,
+    "sector_weights": {
+      "0.0": 1.0
+    },
+    "weight_kept": 1.0
+  }
+}
