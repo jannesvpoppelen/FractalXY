@@ -247,7 +247,7 @@ def triangular_gasket(G,n):
             patch1 = all_patches
             patch2 = patch1 + Nsites_i-1
             patch2[0][0] = right_vertex
-            patch2[2][-2] = 2*(Nsites_i-1) + right_vertex-1
+            patch2[-1][-2] = 2*(Nsites_i-1) + right_vertex-1
             patch3 = patch1 + 2 * Nsites_i - 3
             patch3[0][0] = Nsites_i - 1
         all_patches = np.vstack((patch1, patch2, patch3))
@@ -333,7 +333,7 @@ def honeycomb_gasket(G,n):
             patch1_a = all_patches_a
             patch2_a = patch1_a + Nsites_i_a-1
             patch2_a[0][0] = right_vertex
-            patch2_a[2][-2] = 2*(Nsites_i_a-1) + right_vertex-1
+            patch2_a[-1][-2] = 2*(Nsites_i_a-1) + right_vertex-1
             patch3_a = patch1_a + 2 * Nsites_i_a - 3
             patch3_a[0][0] = Nsites_i_a - 1
         all_patches_a = np.vstack((patch1_a, patch2_a, patch3_a))
@@ -382,3 +382,4 @@ def plot_graph(A,x,y):
         connectionstyle=f'arc3,rad={0.2}'
     )
     plt.axis('equal')
+
