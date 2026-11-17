@@ -1,0 +1,16 @@
+{
+  "shape": "triangular",
+  "generation": 1,
+  "n_sites": 6,
+  "sector_sz": 0.0,
+  "dim": 20,
+  "n_bonds": 9,
+  "J": 1.0,
+  "Jz": 0.0,
+  "energies": [
+    -11.062257748298544,
+    -6.954704696017941
+  ],
+  "time_build_s": 0.0004475116729736328,
+  "time_lanczos_s": 0.00019240379333496094
+}

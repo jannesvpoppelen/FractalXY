@@ -1,0 +1,64 @@
+{
+  "model": {
+    "type": "ViT",
+    "num_layers": 4,
+    "d_model": 48,
+    "n_heads": 6
+  },
+  "sampler": {
+    "type": "MetropolisExchange",
+    "n_chains": 8192,
+    "n_samples": 8192,
+    "n_discard_per_chain": 0,
+    "eval_n_discard_per_chain": 64,
+    "seed": 2,
+    "total_sz": 0.5,
+    "c3v": true,
+    "chunk_size": 1024
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "optimizer": {
+    "type": "exact SR (full sum)",
+    "lr": 0.01,
+    "diag_shift": 0.0001,
+    "momentum": null,
+    "n_opt": 300,
+    "steps_done": 231,
+    "attn_steps": 0,
+    "attn_lr": null,
+    "attn_steps_done": 0,
+    "c3v_mode": "always",
+    "c3v_lr": null,
+    "c3v_steps_done": 0
+  },
+  "final_results": {
+    "exact": true,
+    "final_energy": -11.063171918851417,
+    "final_energy_error": 0.0,
+    "final_variance": 9.329426120530115e-11,
+    "train_energy_last50": -11.063171918666258,
+    "ed_sector_energy": -11.063171918882066,
+    "before_c3v": null,
+    "milestones": {},
+    "training_time": 12.951790809631348
+  },
+  "fractal": {
+    "shape": "honeycomb",
+    "G": 1,
+    "n": 2
+  },
+  "warm_start": {
+    "source": "data/ViT/honeycomb/vit_honeycomb_G=1_seed=2_symm.mpack",
+    "c3v": true,
+    "flipped": true,
+    "sector_weights": {
+      "-0.5": 1.0
+    },
+    "weight_kept": 1.0
+  }
+}

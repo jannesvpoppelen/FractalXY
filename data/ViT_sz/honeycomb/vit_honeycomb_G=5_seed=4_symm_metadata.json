@@ -1,0 +1,72 @@
+{
+  "model": {
+    "type": "ViT",
+    "num_layers": 4,
+    "d_model": 48,
+    "n_heads": 6
+  },
+  "sampler": {
+    "type": "MetropolisExchange",
+    "n_chains": 8192,
+    "n_samples": 8192,
+    "n_discard_per_chain": 0,
+    "eval_n_discard_per_chain": 256,
+    "seed": 4,
+    "total_sz": 0.5,
+    "c3v": true,
+    "chunk_size": 1024
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "optimizer": {
+    "type": "Sgd+VMC_SR",
+    "lr": 0.001,
+    "lr_final": null,
+    "lr_schedule": "constant",
+    "diag_shift": 0.0001,
+    "momentum": 0.8,
+    "n_opt": 800,
+    "steps_done": 800,
+    "c3v_mode": "final",
+    "c3v_lr": 0.001,
+    "c3v_steps_done": 40
+  },
+  "final_results": {
+    "exact": false,
+    "final_energy": -865.2582002671929,
+    "final_energy_error": 0.0022036588138092056,
+    "final_variance": 0.03978127087762633,
+    "train_energy_last50": -865.2570692939017,
+    "ed_sector_energy": null,
+    "before_c3v": {
+      "energy": -865.2532599755029,
+      "error": 0.002820584556675924,
+      "variance": 0.06517307180121061
+    },
+    "milestones": {
+      "before_c3v": {
+        "energy": -865.2532599755029,
+        "error": 0.002820584556675924,
+        "variance": 0.06517307180121061
+      }
+    },
+    "training_time": 180645.17642450333
+  },
+  "fractal": {
+    "shape": "honeycomb",
+    "G": 5,
+    "n": 2
+  },
+  "warm_start": {
+    "source": "data/ViT_sz/honeycomb/vit_honeycomb_G=5_seed=4_symm_prev.mpack",
+    "continued": true,
+    "flipped": false,
+    "weight_kept": 1.0,
+    "chains": "restored",
+    "chains_dropped": 1
+  }
+}

@@ -162,7 +162,9 @@ def xy_correlators(vstate, groups, batch=1024, log_every=600):
 
 def measure(vstate, hi, g, positions=None, H=None, transverse=True, batch=1024):
     """The observables of build_observables, in the same order and from the same samples, with the
-    XY correlators computed by xy_correlators instead of one vstate.expect per group."""
+    XY correlators computed by xy_correlators instead of one vstate.expect per group: each pair
+    (i, j) is evaluated once and assigned to its graph-distance shell, its Euclidean-distance shell
+    and the corner-path distances it lies on."""
     N = g.n_nodes
     if H is None:
         H = build_hamiltonian(hi, g)

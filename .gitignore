@@ -1,6 +1,15 @@
 __pycache__/
 *.pyc
+data/**/*.mpack
+data/data/
+*.out
+*.err
+*.db
 batchscripts/
 logs/
 junk/
 clusterfiles/
+logs_snellius/
+fits_weighted/
+run_fidelity.sh
+run_sz.sh

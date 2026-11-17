@@ -1,5 +1,5 @@
 """Figures for the paper. `python pp.py` rebuilds fig1-fig6 from data/.
-Needs scienceplots, and pdftoppm for fig2."""
+Uses scienceplots if installed; needs pdftoppm for fig2."""
 
 import json
 import subprocess
@@ -13,11 +13,14 @@ from matplotlib import patheffects, ticker
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from PIL import Image, ImageChops
-import scienceplots  # noqa: F401
 
 from fractals import honeycomb_gasket, honeycomb_gasket_coordinates, triangular_gasket
 
-plt.style.use(["science", "no-latex"])
+try:
+    import scienceplots  # noqa: F401
+    plt.style.use(["science", "no-latex"])
+except ImportError:
+    pass
 plt.rcParams.update({"mathtext.fontset": "cm", "font.family": "serif"})
 
 PAGE = 6.75   # PRB double-column width [inch]
@@ -240,7 +243,8 @@ def _scatter_fit(ax, d, c, err, color, marker, filled, fit_lw, fit_ls="--"):
     return eta
 
 
-def _corr_panel(ax, series, clean, xlabel, tag="", legend=False, xlim=None, ylim=None, yticks=None):
+def _corr_panel(ax, series, clean, xlabel, tag="", legend=False, xlim=None, ylim=None, yticks=None,
+                ncol=2):
     handles = []
     for i in reversed(range(len(series))):  # smaller G on top
         d, c, err, label = series[i]
@@ -270,7 +274,7 @@ def _corr_panel(ax, series, clean, xlabel, tag="", legend=False, xlim=None, ylim
     ax.tick_params(which="both", direction="in", top=True, right=True, labelsize=14)
 
     if legend and handles:
-        ax.legend(handles=handles, fontsize=11, loc="lower left", ncol=2, edgecolor="0.5",
+        ax.legend(handles=handles, fontsize=11, loc="lower left", ncol=ncol, edgecolor="0.5",
                   columnspacing=0.4, labelspacing=0.15, handlelength=1.3)
     if tag:
         _tag(ax, tag)

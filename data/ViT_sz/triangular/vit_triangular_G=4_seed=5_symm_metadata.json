@@ -1,0 +1,76 @@
+{
+  "model": {
+    "type": "ViT",
+    "num_layers": 4,
+    "d_model": 48,
+    "n_heads": 6
+  },
+  "sampler": {
+    "type": "MetropolisExchange",
+    "n_chains": 8192,
+    "n_samples": 8192,
+    "n_discard_per_chain": 0,
+    "eval_n_discard_per_chain": 256,
+    "seed": 5,
+    "total_sz": 0.5,
+    "c3v": true,
+    "chunk_size": 1024
+  },
+  "hamiltonian": {
+    "J": 1.0,
+    "Jz": 0.0,
+    "hx": 0.0,
+    "hy": 0.0
+  },
+  "optimizer": {
+    "type": "Sgd+VMC_SR",
+    "lr": 0.001,
+    "lr_final": null,
+    "lr_schedule": "constant",
+    "diag_shift": 0.0001,
+    "momentum": 0.8,
+    "n_opt": 400,
+    "steps_done": 400,
+    "c3v_mode": "final",
+    "c3v_lr": 0.001,
+    "c3v_steps_done": 20
+  },
+  "final_results": {
+    "exact": false,
+    "final_energy": -273.99249469694115,
+    "final_energy_error": 0.0006800433939409356,
+    "final_variance": 0.003788464272529052,
+    "train_energy_last50": -273.992509616317,
+    "ed_sector_energy": null,
+    "before_c3v": {
+      "energy": -273.993794305827,
+      "error": 0.0010780974684893947,
+      "variance": 0.009521513689606074
+    },
+    "milestones": {
+      "before_c3v": {
+        "energy": -273.993794305827,
+        "error": 0.0010780974684893947,
+        "variance": 0.009521513689606074
+      }
+    },
+    "training_time": 10735.487226724625
+  },
+  "fractal": {
+    "shape": "triangular",
+    "G": 4,
+    "n": 2
+  },
+  "warm_start": {
+    "source": "data/ViT/triangular/vit_triangular_G=4_seed=5.mpack",
+    "c3v": false,
+    "flipped": true,
+    "sector_weights": {
+      "-1.5": 0.02294921875,
+      "-0.5": 0.5355224609375,
+      "0.5": 0.4278564453125,
+      "1.5": 0.013671875
+    },
+    "weight_kept": 0.5355224609375
+  }
+}

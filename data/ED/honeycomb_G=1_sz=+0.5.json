@@ -1,0 +1,16 @@
+{
+  "shape": "honeycomb",
+  "generation": 1,
+  "n_sites": 9,
+  "sector_sz": 0.5,
+  "dim": 126,
+  "n_bonds": 9,
+  "J": 1.0,
+  "Jz": 0.0,
+  "energies": [
+    -11.063171918882066,
+    -9.421218665820383
+  ],
+  "time_build_s": 0.0003876686096191406,
+  "time_lanczos_s": 0.014262199401855469
+}
